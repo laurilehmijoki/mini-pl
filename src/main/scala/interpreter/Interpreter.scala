@@ -35,37 +35,56 @@ object Interpreter {
     }
 
   def main(args: Array[String]) = {
-    val tokens = Token.tokenize(
+    interpret(
       """
-        |var z : int := 1;
+        |var z : int := 3;
         |var foo : int := 1 + 3 * 3 - 5 - 5 + 1 + 2 / z;
         |print foo;
-        |""".stripMargin)
+        |""".stripMargin
+    ) match {
+      case Left(err) =>
+        println(err)
+        System.exit(1)
+      case Right(programEvaluator) =>
+        programEvaluator()
+    }
+  }
 
-    val parseResult = StatementSequence.parse(tokens)
-    val javaStatements = statementsToJava(
-      parseResult.map {_.right.get}
-    ).get
+  def interpret(program: String): Either[String, () => Unit] = {
+    val tokens = Token.tokenize(program)
 
-    val root = new File(System.getProperty("java.io.tmpdir"))
-    val sourceFile = File.createTempFile("Test", ".java", root)
-    val className = sourceFile.getName.replaceAll(".java$", "")
-    val javaSrc =
-      s"""
+    val parseResult = StatementSequence.parse(tokens).foldLeft(Right(Nil): Either[Seq[ParseError], Seq[StatementSequence]]) {
+      (memo, item) => item match {
+        case Left(errors) => memo.left.map { _ :+ errors}
+        case Right(statementSequences) => memo.right.map { _ :+ statementSequences}
+      }
+    }
 
+    parseResult.right.map(statementsToJava) match {
+      case Right(Some(javaStatements)) =>
+        Right({ () =>
+          val root = new File(System.getProperty("java.io.tmpdir"))
+          val sourceFile = File.createTempFile("Test", ".java", root)
+          sourceFile.deleteOnExit()
+          val className = sourceFile.getName.replaceAll(".java$", "")
+          val javaSrc =
+            s"""
 public class $className {
     static {
         $javaStatements
     }
 }
       """
-    Files.write(sourceFile.toPath, javaSrc.getBytes("utf-8"))
+          Files.write(sourceFile.toPath, javaSrc.getBytes("utf-8"))
 
-    ToolProvider.getSystemJavaCompiler.run(null, null, null, sourceFile.getPath)
+          ToolProvider.getSystemJavaCompiler.run(null, null, null, sourceFile.getPath)
 
-    val classLoader = URLClassLoader.newInstance(Seq(root.toURI.toURL).toArray)
-    Class.forName(className, true, classLoader)
+          val classLoader = URLClassLoader.newInstance(Seq(root.toURI.toURL).toArray)
+          Class.forName(className, true, classLoader)
+        })
+      case Right(None) => Left("Could not construct Java statements")
+      case Left(err) => Left(err.mkString("\n"))
 
-    println(javaSrc)
+    }
   }
 }
