@@ -78,6 +78,10 @@ object Token {
     override def token: String = intValue.toString
   }
 
+  case class VarReference(identifierToken: IdentifierToken) extends OperandToken {
+    override def token: String = identifierToken.token
+  }
+
   sealed trait Keyword extends Token
 
   object VarKeyword extends Keyword {
@@ -98,7 +102,7 @@ object Token {
     override val token: String = "string"
   }
 
-  case class IdentifierToken(token: String) extends Token
+  case class IdentifierToken(token: String) extends ExpressionToken
 
   object AssignmentToken extends Token {
     override val token: String = ":="

@@ -11,12 +11,13 @@ import frontend._
 object Interpreter {
   def statementsToJava(statements: Seq[StatementSequence]): Option[String] =
     statements.foldLeft(None: Option[String]) { (javaSrc, statement) =>
+      def asInfix(expression: AstNode): String = ast.toInfix(
+        Token.tokenize(ast.toPostfix(expression)) collect {
+          case e: ExpressionToken => e
+        }
+      )
       val statementInJava = statement match {
-        case p: Print => s"System.out.println(${ast.toInfix(
-          Token.tokenize(ast.toPostfix(p.expression)) collect {
-            case e: ExpressionToken => e
-          }
-        )});" :: Nil
+        case p: Print => s"System.out.println(${asInfix(p.expression)});" :: Nil
         case v: VarDeclaration =>
           (v.typeKeyword match {
             case IntTypeKeyword => "int"
@@ -24,11 +25,7 @@ object Interpreter {
           }) ::
           v.identifierToken.token ::
           "=" ::
-          ast.toInfix(
-            Token.tokenize(ast.toPostfix(v.expression)) collect {
-              case e: ExpressionToken => e
-            }
-          ) :: ";" :: Nil
+          asInfix(v.expression) :: ";" :: Nil
       }
       Some(
         s"""
@@ -40,8 +37,9 @@ object Interpreter {
   def main(args: Array[String]) = {
     val tokens = Token.tokenize(
       """
-        |var foo : int := 42;
-        |print 99;
+        |var z : int := 1;
+        |var foo : int := 1 + 3 * 3 - 5 - 5 + 1 + 2 / z;
+        |print foo;
         |""".stripMargin)
 
     val parseResult = StatementSequence.parse(tokens)

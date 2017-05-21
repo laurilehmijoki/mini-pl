@@ -23,6 +23,8 @@ object ast {
         case Multiply | Divide => 3
       }
     infixTokens.foreach {
+      case identifier: IdentifierToken =>
+        outputStack push identifier
       case operand: OperandToken =>
         outputStack push operand
       case operator: OperatorToken =>
@@ -39,12 +41,14 @@ object ast {
       case operand: OperandNode =>
         operand.operandToken.token
       case operator: OperatorNode =>
-        toPostfix(operator.left) + operator.operatorToken.token + toPostfix(operator.right)
+        s"${toPostfix(operator.left)} ${toPostfix(operator.right)} ${operator.operatorToken.token}"
     }
 
   def toInfix(postfix: Seq[ExpressionToken]): String = {
     val stack = mutable.Stack[String]()
     postfix.foreach {
+      case identifierToken: IdentifierToken =>
+        stack push identifierToken.token
       case operand: OperandToken =>
         stack push operand.token
       case operator: OperatorToken =>
@@ -71,6 +75,7 @@ object ast {
       case headToken +: tail =>
         headToken match {
           case operand: OperandToken => toAst(tail, OperandNode(operand) +: stack)
+          case identifier: IdentifierToken => toAst(tail, OperandNode(VarReference(identifier)) +: stack)
           case operator: OperatorToken =>
             stack match {
               case first +: second +: stackTail =>
@@ -86,15 +91,21 @@ object ast {
         }
     }
 
-  def eval(rootNode: AstNode): Int =
+  def eval(rootNode: AstNode, statements: Seq[StatementSequence]): Int =
     rootNode match {
       case operandNode: OperandNode =>
         operandNode.operandToken match {
           case intToken: IntToken => intToken.intValue
+          case varReference: VarReference =>
+            val referencedAst = statements.collect {
+              case v: VarDeclaration if v.identifierToken == varReference.identifierToken => v.expression
+            }.headOption
+
+            eval(referencedAst.getOrElse(throw new RuntimeException(s"Cannot find referenced var $varReference")), statements)
         }
       case operatorNode: OperatorNode =>
-        val left = eval(operatorNode.left)
-        val right = eval(operatorNode.right)
+        val left = eval(operatorNode.left, statements)
+        val right = eval(operatorNode.right, statements)
         operatorNode.operatorToken match {
           case Plus => left + right
           case Minus => left - right

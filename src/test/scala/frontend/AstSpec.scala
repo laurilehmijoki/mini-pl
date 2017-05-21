@@ -54,7 +54,7 @@ class AstSpec extends Specification {
         }
         val postfix = ast.toPostfix(expressionTokens)
         val astRoot = ast.toAst(postfix).right.get
-        ast.eval(astRoot) should equalTo(expectedEvalResult)
+        ast.eval(astRoot, Nil) should equalTo(expectedEvalResult)
       }
     }
   }
