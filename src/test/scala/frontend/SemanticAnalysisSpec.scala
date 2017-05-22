@@ -5,7 +5,7 @@ import org.specs2.mutable.Specification
 
 class SemanticAnalysisSpec extends Specification {
 
-  implicit val tokenLocation = TokenLocation(-1, StringSource("foo"))
+  implicit val tokenLocation = TokenLocation(-1)
 
   Seq(
     (

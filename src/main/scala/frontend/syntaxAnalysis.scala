@@ -40,7 +40,7 @@ object StatementSequence {
       )
     }._2
 
-    tokenStatements.map { tokensInStatement =>
+    tokenStatements.map { (tokensInStatement: Seq[Token]) =>
       def findParser(token: Token): Option[StatementParser] =
         token match {
           case VarKeyword(_) => Some { VarDeclaration.parse }
@@ -66,7 +66,7 @@ object StatementSequence {
             case Right(statementSequence) => Right(statementSequence)
           }
         }
-        .getOrElse(Left(SimpleError(s"Cannot find parser for the statement $tokensInStatement")))
+        .getOrElse(Left(SyntaxError(tokensInStatement, s"Cannot find parser for the statement $tokensInStatement")))
 
       statement
     }
@@ -96,20 +96,20 @@ object VarDeclaration {
       case first +: second +: third +: fourth +: tail =>
         val identifierOrError: Either[ParseError, IdentifierToken] = first match {
           case ident: IdentifierToken => Right(ident)
-          case wrongToken => Left(SimpleError(s"Unexpected identifier $wrongToken, expected an identifier"))
+          case wrongToken => Left(SyntaxError(tokens, s"Unexpected identifier $wrongToken, expected an identifier"))
         }
         val typePrefixOrError: Either[ParseError, Unit] = second match {
           case TypePrefixToken(_) => Right(Unit)
-          case wrongToken => Left(SimpleError(s"Unexpected type prefix $wrongToken, expected $TypePrefixToken"))
+          case wrongToken => Left(SyntaxError(tokens, s"Unexpected type prefix $wrongToken, expected $TypePrefixToken"))
         }
         val typeOrError: Either[ParseError, TypeKeyword] = third match {
           case typeKeyword: TypeKeyword => Right(typeKeyword)
-          case wrongToken => Left(SimpleError(s"Unexpected type keyword $wrongToken"))
+          case wrongToken => Left(SyntaxError(tokens, s"Unexpected type keyword $wrongToken"))
         }
 
         val assignmentOrError: Either[ParseError, Token] = fourth match {
           case assignment: AssignmentToken => Right(assignment)
-          case wrongToken => Left(SimpleError(s"$wrongToken is not the expected $AssignmentToken"))
+          case wrongToken => Left(SyntaxError(tokens, s"$wrongToken is not the expected $AssignmentToken"))
         }
 
         val expressionOrError: Either[ParseError, Expression] = for {
@@ -125,13 +125,13 @@ object VarDeclaration {
               case Left(parseError) => parseError
             })
         }
-      case x => Left(SimpleError(s"Invalid var declaration $x") :: Nil)
+      case x => Left(SyntaxError(tokens, s"Invalid var declaration $x") :: Nil)
     }
 }
 
 sealed trait ParseError
 
-case class SimpleError(message: String) extends ParseError
+case class SyntaxError(tokens: Seq[Token], message: String) extends ParseError
 case class ManyErrors(errors: Seq[ParseError]) extends ParseError
 case class OperatorAtInvalidPosition(stack: List[Expression], operatorToken: OperatorToken) extends ParseError
 case class MalformedStack(stack: List[Expression]) extends ParseError

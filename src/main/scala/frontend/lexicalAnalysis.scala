@@ -1,13 +1,8 @@
 package frontend
 
-import java.io
-
 import scala.util.Try
 
-sealed trait TokenSource
-case class StringSource(src: String) extends TokenSource
-
-case class TokenLocation(startIndex: Int, source: TokenSource)
+case class TokenLocation(startIndex: Int)
 
 sealed trait Token {
   def token: String
@@ -57,11 +52,11 @@ object Token {
       }
     }
 
-    tokenCandidates.map(Token.from(_, StringSource(source)))
+    tokenCandidates.map(Token.from)
   }
 
-  def from(tokenCandidate: TokenCandidate, source: TokenSource): Token = {
-    implicit val tokenLocation = TokenLocation(tokenCandidate.startIndex, source)
+  def from(tokenCandidate: TokenCandidate): Token = {
+    implicit val tokenLocation = TokenLocation(tokenCandidate.startIndex)
     tokenCandidate.string match {
       case t@"var" => VarKeyword(t)
       case t@"print" => PrintKeyword(t)

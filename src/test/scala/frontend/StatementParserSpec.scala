@@ -4,7 +4,7 @@ import frontend.Token._
 import org.specs2.mutable.Specification
 
 class StatementParserSpec extends Specification {
-  implicit val tokenLocation = TokenLocation(-1, StringSource("foo"))
+  implicit val tokenLocation = TokenLocation(-1)
 
   Seq(
       (

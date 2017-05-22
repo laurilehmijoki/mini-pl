@@ -19,8 +19,8 @@ object expr {
     val operatorStack = mutable.Stack[OperatorToken]()
     def precedence(operatorToken: OperatorToken): Int =
       operatorToken match {
-        case Plus(_) | Minus(_) => 2
-        case Multiply(_) | Divide(_) => 3
+        case Plus() | Minus() => 2
+        case Multiply() | Divide() => 3
       }
     infixTokens.foreach {
       case identifier: IdentifierToken =>
@@ -53,8 +53,8 @@ object expr {
         stack push operand.token
       case operator: OperatorToken =>
         val str = (operator, stack.pop(), stack.pop()) match {
-          case (Plus(_) | Minus(_), first, second) => s"$second ${operator.token} $first"
-          case (Multiply(_) | Divide(_), first, second) => s"($second) ${operator.token} ($first)"
+          case (Plus() | Minus(), first, second) => s"$second ${operator.token} $first"
+          case (Multiply() | Divide(), first, second) => s"($second) ${operator.token} ($first)"
         }
         stack push str
     }
@@ -88,7 +88,7 @@ object expr {
       memo.right.flatMap { expressionTokens =>
         token match {
           case e: ExpressionToken => Right(expressionTokens :+ e)
-          case t => Left(SimpleError(s"Invalid token $t. Expected an expression token."))
+          case t => Left(SyntaxError(tokens, s"Invalid token $t. Expected an expression token."))
         }
       }
     }

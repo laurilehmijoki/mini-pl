@@ -2,12 +2,13 @@ package interpreter
 
 import frontend.Token._
 import frontend._
+import utils.errorReporter
 
 object interpreter {
   def main(args: Array[String]) = {
     val program = """
                     |var z : int := 3;
-                    |var foo : int := 1 + z;
+                    |var foo : int := 1 + "";
                     |print foo;
                     |baz
                     |""".stripMargin
@@ -28,8 +29,9 @@ object interpreter {
       }
     }
     val exitStatus = parseResult.right.map(astUtils.build) match {
-      case Left(err) =>
-        println(err)
+      case Left(err: Seq[ParseError]) =>
+
+        println(errorReporter.createErrorReport(program, err))
         1
       case Right(ast) =>
         visit(ast)
@@ -48,7 +50,10 @@ object interpreter {
           case v: VarDeclaration =>
             symbols + (v.identifierToken -> evaluate(v.expression, symbols))
           case p: Print =>
-            println(evaluate(p.expression, symbols))
+            val symbolValue = evaluate(p.expression, symbols)
+            symbolValue match {
+              case i: IntegerValue => println(i.value)
+            }
             symbols
         }
 
@@ -69,10 +74,10 @@ object interpreter {
         (evaluate(operatorNode.left, symbols), evaluate(operatorNode.right, symbols)) match {
           case (IntegerValue(left), IntegerValue(right)) =>
             val intResult = operatorNode.operatorToken match {
-              case Plus(_) => left + right
-              case Minus(_) => left - right
-              case Divide(_) => left / right
-              case Multiply(_) => left * right
+              case Plus() => left + right
+              case Minus() => left - right
+              case Divide() => left / right
+              case Multiply() => left * right
             }
             IntegerValue(intResult)
           case _ =>
