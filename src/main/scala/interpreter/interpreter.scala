@@ -5,14 +5,21 @@ import frontend._
 import utils.errorReporter
 
 object interpreter {
-  def main(args: Array[String]) = {
-    val program = """
-                    |var z : int := 3;
-                    |var foo : int := 1 + "";
-                    |print foo;
-                    |baz
-                    |""".stripMargin
+  val programWithTwoErrors = """
+                  |var z : int := 3;
+                  |var foo : int := 1 + "";
+                  |print foo;
+                  |baz
+                  |""".stripMargin
 
+  val program = """
+                               |var z : int := 3;
+                               |var foo : int := 1 + z;
+                               |print foo;
+                               |""".stripMargin
+
+
+  def main(args: Array[String]) = {
     System.exit(interpret(program))
   }
 
