@@ -9,8 +9,8 @@ object interpreter {
                     |var z : int := 3;
                     |var foo : int := 1 + z;
                     |print foo;
+                    |baz
                     |""".stripMargin
-
 
     System.exit(interpret(program))
   }
@@ -69,10 +69,10 @@ object interpreter {
         (evaluate(operatorNode.left, symbols), evaluate(operatorNode.right, symbols)) match {
           case (IntegerValue(left), IntegerValue(right)) =>
             val intResult = operatorNode.operatorToken match {
-              case Plus => left + right
-              case Minus => left - right
-              case Divide => left / right
-              case Multiply => left * right
+              case Plus(_) => left + right
+              case Minus(_) => left - right
+              case Divide(_) => left / right
+              case Multiply(_) => left * right
             }
             IntegerValue(intResult)
           case _ =>

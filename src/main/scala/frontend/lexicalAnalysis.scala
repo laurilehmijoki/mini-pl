@@ -1,9 +1,17 @@
 package frontend
 
+import java.io
+
 import scala.util.Try
+
+sealed trait TokenSource
+case class StringSource(src: String) extends TokenSource
+
+case class TokenLocation(startIndex: Int, source: TokenSource)
 
 sealed trait Token {
   def token: String
+  def tokenLocation: TokenLocation
 
   override def toString = s"${getClass.getSimpleName}($token)"
 }
@@ -12,95 +20,101 @@ object Token {
   val intToken = "(\\d+)".r
   val identifierToken = "([a-zA-Z]+)".r
 
-  def tokenize(str: String): Seq[Token] =
-    str.trim.split("\\s")
-      .flatMap { str =>
-        val itemWithTerminator = "(.*)(;)".r
-        str match {
-          case itemWithTerminator(item, terminator) => Seq(item, terminator)
-          case _ => Seq(str)
-        }
+  case class TokenCandidate(string: String, startIndex: Int)
+
+  def tokenize(source: String): Seq[Token] = {
+    type CurrentToken = Option[String]
+    val tokenCandidates: Seq[TokenCandidate] = source.zipWithIndex.foldLeft((Nil, None): (Seq[TokenCandidate], CurrentToken)) { (memo, charAndPosition) =>
+      val chr: Char = charAndPosition._1
+      val position = charAndPosition._2
+      val whitespace = "(\\s)".r
+      val currentToken: CurrentToken = memo._2
+      val previousCandidates = memo._1
+      chr.toString match {
+        case whitespace(space) =>
+          val candidates = currentToken
+            .map { currentTokenStr =>
+              previousCandidates :+
+                TokenCandidate(currentTokenStr, position - currentTokenStr.length)
+            }.getOrElse(previousCandidates)
+          (
+            candidates,
+            None
+          )
+        case str =>
+          (
+            previousCandidates,
+            currentToken.map(_ + str).orElse(Some(str))
+          )
       }
-      .map(Token.from)
-
-
-  def from(tokenCandidate: String): Token =
-    tokenCandidate match {
-      case VarKeyword.token => VarKeyword
-      case PrintKeyword.token => PrintKeyword
-      case IntTypeKeyword.token => IntTypeKeyword
-      case StringTypeKeyword.token => StringTypeKeyword
-      case intToken(intCandidate) => Try(intCandidate.toInt).toOption.map(IntToken).getOrElse(Unrecognised(intCandidate))
-      case identifierToken(identifier) => IdentifierToken(identifier)
-      case AssignmentToken.token => AssignmentToken
-      case SemicolonToken.token => SemicolonToken
-      case TypePrefixToken.token => TypePrefixToken
-      case Plus.token => Plus
-      case Minus.token => Minus
-      case Multiply.token => Multiply
-      case Divide.token => Divide
-      case x => Unrecognised(x)
+    }._1.flatMap { candidate =>
+      val tokenWithStatementTerminator = "(.+)(;)".r
+      candidate.string match {
+        case tokenWithStatementTerminator(token, terminator) =>
+          TokenCandidate(token, candidate.startIndex) :: TokenCandidate(terminator, candidate.startIndex + token.length) :: Nil
+        case _ =>
+          candidate :: Nil
+      }
     }
 
-  case class Unrecognised(token: String) extends Token
+    tokenCandidates.map(Token.from(_, StringSource(source)))
+  }
+
+  def from(tokenCandidate: TokenCandidate, source: TokenSource): Token = {
+    implicit val tokenLocation = TokenLocation(tokenCandidate.startIndex, source)
+    tokenCandidate.string match {
+      case t@"var" => VarKeyword(t)
+      case t@"print" => PrintKeyword(t)
+      case t@"int" => IntTypeKeyword(t)
+      case t@"string" => StringTypeKeyword(t)
+      case intToken(intCandidate) => Try(intCandidate.toInt).toOption.map(IntToken(_)).getOrElse(Unrecognised(intCandidate))
+      case identifierToken(identifier) => IdentifierToken(identifier)
+      case t@":=" => AssignmentToken(t)
+      case t@";" => SemicolonToken(t)
+      case t@":" => TypePrefixToken(t)
+      case "+" => Plus()
+      case "-" => Minus()
+      case "*" => Multiply()
+      case "/" => Divide()
+      case unrecognised => Unrecognised(unrecognised)
+    }
+  }
+
+  case class Unrecognised(token: String)(implicit val tokenLocation: TokenLocation) extends Token
 
   sealed trait StatementTerminator extends Token
 
-  object SemicolonToken extends StatementTerminator {
-    override val token: String = ";"
-  }
+  case class SemicolonToken(token: String)(implicit val tokenLocation: TokenLocation) extends StatementTerminator
 
-  object TypePrefixToken extends Token {
-    override val token: String = ":"
-  }
+  case class TypePrefixToken(token: String)(implicit val tokenLocation: TokenLocation) extends Token
 
   sealed trait ExpressionToken extends Token
   sealed trait OperatorToken extends ExpressionToken
   sealed trait OperandToken extends ExpressionToken
 
-  object Plus extends OperatorToken {
-    override val token: String = "+"
+  case class Plus(implicit val tokenLocation: TokenLocation) extends OperatorToken {
+    override def token: String = "+"
   }
-
-  object Minus extends OperatorToken {
-    override val token: String = "-"
+  case class Minus(implicit val tokenLocation: TokenLocation) extends OperatorToken {
+    override def token: String = "-"
   }
-
-  object Multiply extends OperatorToken {
-    override val token: String = "*"
+  case class Multiply(implicit val tokenLocation: TokenLocation) extends OperatorToken {
+    override def token: String = "*"
   }
-
-  object Divide extends OperatorToken {
-    override val token: String = "/"
+  case class Divide(implicit val tokenLocation: TokenLocation) extends OperatorToken {
+    override def token: String = "/"
   }
-
-  case class IntToken(intValue: Int) extends OperandToken {
+  case class IdentifierToken(token: String)(implicit val tokenLocation: TokenLocation) extends OperandToken
+  case class IntToken(intValue: Int)(implicit val tokenLocation: TokenLocation) extends OperandToken {
     override def token: String = intValue.toString
   }
 
   sealed trait Keyword extends Token
-
-  object VarKeyword extends Keyword {
-    override val token: String = "var"
-  }
-
-  object PrintKeyword extends Keyword {
-    override val token: String = "print"
-  }
-
+  case class VarKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
+  case class PrintKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
   sealed trait TypeKeyword extends Keyword
+  case class IntTypeKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends TypeKeyword
+  case class StringTypeKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends TypeKeyword
 
-  object IntTypeKeyword extends TypeKeyword {
-    override val token: String = "int"
-  }
-
-  object StringTypeKeyword extends TypeKeyword {
-    override val token: String = "string"
-  }
-
-  case class IdentifierToken(token: String) extends OperandToken
-
-  object AssignmentToken extends Token {
-    override val token: String = ":="
-  }
+  case class AssignmentToken(token: String)(implicit val tokenLocation: TokenLocation) extends Token
 }

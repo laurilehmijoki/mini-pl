@@ -43,8 +43,8 @@ object StatementSequence {
     tokenStatements.map { tokensInStatement =>
       def findParser(token: Token): Option[StatementParser] =
         token match {
-          case VarKeyword => Some { VarDeclaration.parse }
-          case PrintKeyword => Some { Print.parse }
+          case VarKeyword(_) => Some { VarDeclaration.parse }
+          case PrintKeyword(_) => Some { Print.parse }
           case _ => None
         }
 
@@ -99,7 +99,7 @@ object VarDeclaration {
           case wrongToken => Left(SimpleError(s"Unexpected identifier $wrongToken, expected an identifier"))
         }
         val typePrefixOrError: Either[ParseError, Unit] = second match {
-          case TypePrefixToken => Right(Unit)
+          case TypePrefixToken(_) => Right(Unit)
           case wrongToken => Left(SimpleError(s"Unexpected type prefix $wrongToken, expected $TypePrefixToken"))
         }
         val typeOrError: Either[ParseError, TypeKeyword] = third match {
@@ -108,7 +108,7 @@ object VarDeclaration {
         }
 
         val assignmentOrError: Either[ParseError, Token] = fourth match {
-          case AssignmentToken => Right(AssignmentToken)
+          case assignment: AssignmentToken => Right(assignment)
           case wrongToken => Left(SimpleError(s"$wrongToken is not the expected $AssignmentToken"))
         }
 
