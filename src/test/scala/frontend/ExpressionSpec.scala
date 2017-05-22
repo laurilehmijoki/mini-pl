@@ -3,7 +3,7 @@ package frontend
 import frontend.Token._
 import org.specs2.mutable.Specification
 
-class AstSpec extends Specification {
+class ExpressionSpec extends Specification {
 
  Seq(
    (
@@ -52,8 +52,8 @@ class AstSpec extends Specification {
         val expressionTokens = Token.tokenize(expressionString).collect {
           case expressionToken: ExpressionToken => expressionToken
         }
-        val postfix = ast.toPostfix(expressionTokens)
-        val astRoot = ast.toAst(postfix).right.get
+        val postfix = expression.toPostfix(expressionTokens)
+        val astRoot = expression.toAst(postfix).right.get
         eval(astRoot, Nil) should equalTo(expectedEvalResult)
       }
     }
@@ -67,7 +67,7 @@ class AstSpec extends Specification {
         val expressionTokens = Token.tokenize(invalidExpression).collect {
           case expressionToken: ExpressionToken => expressionToken
         }
-        ast.toAst(ast.toPostfix(expressionTokens)).left.get match {
+        expression.toAst(expression.toPostfix(expressionTokens)).left.get match {
           case invalidStack: OperatorAtInvalidPosition =>
             invalidStack.operatorToken should equalTo(Token.Multiply)
         }
@@ -75,7 +75,7 @@ class AstSpec extends Specification {
     }
   }
 
-  def eval(rootNode: AstNode, statements: Seq[StatementSequence]): Int =
+  def eval(rootNode: Expression, statements: Seq[StatementSequence]): Int =
     rootNode match {
       case operandNode: OperandNode =>
         operandNode.operandToken match {

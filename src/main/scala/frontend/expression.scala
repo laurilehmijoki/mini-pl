@@ -5,11 +5,11 @@ import frontend.Token._
 import scala.annotation.tailrec
 import scala.collection.mutable
 
-sealed trait AstNode
-case class OperandNode(operandToken: OperandToken) extends AstNode
-case class OperatorNode(operatorToken: OperatorToken, left: AstNode, right: AstNode) extends AstNode
+sealed trait Expression
+case class OperandNode(operandToken: OperandToken) extends Expression
+case class OperatorNode(operatorToken: OperatorToken, left: Expression, right: Expression) extends Expression
 
-object ast {
+object expression {
 
   /**
     * https://en.wikipedia.org/wiki/Shunting-yard_algorithm
@@ -36,7 +36,7 @@ object ast {
     outputStack.pushAll(operatorStack).toList.reverse
   }
 
-  def toPostfix(astNode: AstNode): String =
+  def toPostfix(astNode: Expression): String =
     astNode match {
       case operand: OperandNode =>
         operand.operandToken.token
@@ -63,7 +63,7 @@ object ast {
   }
 
   @tailrec
-  def toAst(postfixTokens: List[ExpressionToken], stack: List[AstNode] = Nil): Either[ParseError, AstNode] =
+  def toAst(postfixTokens: List[ExpressionToken], stack: List[Expression] = Nil): Either[ParseError, Expression] =
     postfixTokens match {
       case headToken +: tail =>
         headToken match {

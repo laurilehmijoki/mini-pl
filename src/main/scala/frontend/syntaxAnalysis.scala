@@ -73,21 +73,21 @@ object StatementSequence {
   }
 }
 
-case class Print(expression: AstNode) extends StatementSequence
+case class Print(expression: Expression) extends StatementSequence
 
 object Print {
   def parse(tokens: Seq[Token]): StatementParseResult =
     (
       for {
-        expressionTokens <- ast.expressionTokens(tokens)
-        astRoot <- ast.toAst(ast.toPostfix(expressionTokens))
+        expressionTokens <- expression.expressionTokens(tokens)
+        astRoot <- expression.toAst(expression.toPostfix(expressionTokens))
       } yield Print(astRoot)
     )
       .left.map { _ :: Nil }
 }
 
 // "var" <var_ident> ":" <type> [ ":=" <expr> ]
-case class VarDeclaration(identifierToken: IdentifierToken, typeKeyword: TypeKeyword, expression: AstNode) extends StatementSequence
+case class VarDeclaration(identifierToken: IdentifierToken, typeKeyword: TypeKeyword, expression: Expression) extends StatementSequence
 
 object VarDeclaration {
   def parse(tokens: Seq[Token]): StatementParseResult =
@@ -111,13 +111,13 @@ object VarDeclaration {
           case wrongToken => Left(SimpleError(s"$wrongToken is not the expected $AssignmentToken"))
         }
 
-        val expressionOrError: Either[ParseError, AstNode] = for {
-          expressionTokens <- ast.expressionTokens(tail)
-          astRoot <- ast.toAst(ast.toPostfix(expressionTokens))
+        val expressionOrError: Either[ParseError, Expression] = for {
+          expressionTokens <- expression.expressionTokens(tail)
+          astRoot <- expression.toAst(expression.toPostfix(expressionTokens))
         } yield astRoot
 
         identifierOrError :: typePrefixOrError :: typeOrError :: assignmentOrError :: expressionOrError :: Nil match {
-          case Right(identifier: IdentifierToken) +: Right(_) +: Right(typeVal: TypeKeyword) +: Right(_) +: Right(expression: AstNode) +: _ =>
+          case Right(identifier: IdentifierToken) +: Right(_) +: Right(typeVal: TypeKeyword) +: Right(_) +: Right(expression: Expression) +: _ =>
             Right(VarDeclaration(identifier, typeVal, expression))
           case xs =>
             Left(xs.collect {
@@ -132,5 +132,5 @@ sealed trait ParseError
 
 case class SimpleError(message: String) extends ParseError
 case class ManyErrors(errors: Seq[ParseError]) extends ParseError
-case class OperatorAtInvalidPosition(stack: List[AstNode], operatorToken: OperatorToken) extends ParseError
-case class MalformedStack(stack: List[AstNode]) extends ParseError
+case class OperatorAtInvalidPosition(stack: List[Expression], operatorToken: OperatorToken) extends ParseError
+case class MalformedStack(stack: List[Expression]) extends ParseError

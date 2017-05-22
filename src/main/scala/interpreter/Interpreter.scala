@@ -11,8 +11,8 @@ import frontend._
 object Interpreter {
   def statementsToJava(statements: Seq[StatementSequence]): Option[String] =
     statements.foldLeft(None: Option[String]) { (javaSrc, statement) =>
-      def asInfix(expression: AstNode): String = ast.toInfix(
-        Token.tokenize(ast.toPostfix(expression)) collect {
+      def asInfix(expression: Expression): String = expression.toInfix(
+        Token.tokenize(expression.toPostfix(expression)) collect {
           case e: ExpressionToken => e
         }
       )
