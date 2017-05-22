@@ -20,8 +20,11 @@ object interpreter {
 
     val parseResult = StatementSequence.parse(tokens).foldLeft(Right(Nil): Either[Seq[ParseError], Seq[StatementSequence]]) {
       (memo, item) => item match {
-        case Left(errors) => memo.left.map { _ :+ errors}
-        case Right(statementSequences) => memo.right.map { _ :+ statementSequences}
+        case Left(errors) =>
+          val previousErrors = memo.left.getOrElse(Nil)
+          Left(previousErrors :+ errors)
+        case Right(statementSequences) =>
+          memo.right.map { _ :+ statementSequences}
       }
     }
     val exitStatus = parseResult.right.map(astUtils.build) match {
