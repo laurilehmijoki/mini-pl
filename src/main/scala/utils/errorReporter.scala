@@ -34,6 +34,8 @@ object errorReporter {
         ("Operator in invalid position", e.toString) :: Nil
       case e: MalformedStack =>
         ("Malformed stack", e.stack.toString()) :: Nil
+      case e: InvalidExpression =>
+        ("Invalid expression", e.expression.toString) :: Nil
     }
 
     val headlines = headlinesAndDescriptions(errors).map(Function.tupled { (title, message) =>
@@ -51,6 +53,13 @@ object errorReporter {
         e.identifierToken :: Nil
       case syntaxError: SyntaxError =>
         syntaxError.tokens
+      case e: InvalidExpression =>
+        def findInvalidToken(expression: Expression): Token =
+          expression match {
+            case operand: OperandNode => operand.operandToken
+            case operator: OperatorNode => findInvalidToken(operator.right)
+          }
+        findInvalidToken(e.expression) :: Nil
       case OperatorAtInvalidPosition(_, _) | MalformedStack(_) =>
         Nil
       case manyErrors: ManyErrors =>

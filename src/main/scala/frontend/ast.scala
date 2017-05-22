@@ -1,14 +1,9 @@
 package frontend
 
-import frontend.Token._
-
 sealed trait Ast
 
 object EmptyNode extends Ast
 case class AstNode(statement: StatementSequence, children: Seq[AstNode] = Nil) extends Ast
-
-sealed trait SymbolValue
-case class IntegerValue(value: Int) extends SymbolValue
 
 object astUtils {
   def build(statements: Seq[StatementSequence]): Ast = {

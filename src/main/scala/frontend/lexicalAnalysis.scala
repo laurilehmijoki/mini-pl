@@ -13,6 +13,7 @@ sealed trait Token {
 
 object Token {
   val intToken = "(\\d+)".r
+  val stringToken = """(".*")""".r
   val identifierToken = "([a-zA-Z]+)".r
 
   case class TokenCandidate(string: String, startIndex: Int)
@@ -63,6 +64,7 @@ object Token {
       case t@"int" => IntTypeKeyword(t)
       case t@"string" => StringTypeKeyword(t)
       case intToken(intCandidate) => Try(intCandidate.toInt).toOption.map(IntToken(_)).getOrElse(Unrecognised(intCandidate))
+      case stringToken(string) => StringToken(string)
       case identifierToken(identifier) => IdentifierToken(identifier)
       case t@":=" => AssignmentToken(t)
       case t@";" => SemicolonToken(t)
@@ -87,6 +89,8 @@ object Token {
   sealed trait OperatorToken extends ExpressionToken
   sealed trait OperandToken extends ExpressionToken
 
+  sealed trait Terminal
+
   case class Plus(implicit val tokenLocation: TokenLocation) extends OperatorToken {
     override def token: String = "+"
   }
@@ -100,9 +104,11 @@ object Token {
     override def token: String = "/"
   }
   case class IdentifierToken(token: String)(implicit val tokenLocation: TokenLocation) extends OperandToken
-  case class IntToken(intValue: Int)(implicit val tokenLocation: TokenLocation) extends OperandToken {
+  case class IntToken(intValue: Int)(implicit val tokenLocation: TokenLocation) extends OperandToken with Terminal {
     override def token: String = intValue.toString
   }
+
+  case class StringToken(token: String)(implicit val tokenLocation: TokenLocation) extends OperandToken with Terminal
 
   sealed trait Keyword extends Token
   case class VarKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword

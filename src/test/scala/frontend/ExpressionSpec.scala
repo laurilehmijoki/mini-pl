@@ -1,8 +1,8 @@
 package frontend
 
 import frontend.Token._
+import interpreter.IntegerValue
 import org.specs2.mutable.Specification
-
 import interpreter.interpreter._
 
 class ExpressionSpec extends Specification {

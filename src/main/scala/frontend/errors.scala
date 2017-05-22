@@ -14,3 +14,4 @@ case class MalformedStack(stack: List[Expression]) extends ParseError
 sealed trait SemanticError extends CompilationError
 case class TokenAlreadyDeclared(conflictingToken: Token, declaredHere: VarDeclaration) extends SemanticError
 case class IdentifierNotDeclared(identifierToken: IdentifierToken) extends SemanticError
+case class InvalidExpression(expression: Expression) extends SemanticError

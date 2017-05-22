@@ -4,6 +4,10 @@ import frontend.Token._
 import frontend._
 import utils.errorReporter
 
+sealed trait SymbolValue
+case class IntegerValue(value: Int) extends SymbolValue
+case class StringValue(value: String) extends SymbolValue
+
 object interpreter {
   val programWithTwoErrors = """
                   |var z : int := 3;
@@ -11,6 +15,17 @@ object interpreter {
                   |print foo;
                   |baz
                   |""".stripMargin
+
+  val typeAssignmentError = """
+                               |var z : string := 3;
+                               |var foo : int := 1 + z;
+                               |print foo;
+                               |""".stripMargin
+
+  val stringAndIntEvaluation = """
+                              |var foo : int := 1 + "test";
+                              |print foo;
+                              |""".stripMargin
 
   val program = """
                                |var z : int := 3;
@@ -69,6 +84,7 @@ object interpreter {
             val symbolValue = evaluate(p.expression, symbols)
             symbolValue match {
               case i: IntegerValue => println(i.value)
+              case s: StringValue => println(s.value)
             }
             symbols
         }
@@ -83,6 +99,7 @@ object interpreter {
       case operandNode: OperandNode =>
         operandNode.operandToken match {
           case intToken: IntToken => IntegerValue(intToken.intValue)
+          case stringToken: StringToken => StringValue(stringToken.token)
           case identifier: IdentifierToken =>
             symbols.getOrElse(identifier, throw new RuntimeException(s"Cannot find symbol $identifier"))
         }
