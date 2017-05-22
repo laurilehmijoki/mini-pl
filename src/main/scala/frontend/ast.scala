@@ -91,29 +91,6 @@ object ast {
         }
     }
 
-  def eval(rootNode: AstNode, statements: Seq[StatementSequence]): Int =
-    rootNode match {
-      case operandNode: OperandNode =>
-        operandNode.operandToken match {
-          case intToken: IntToken => intToken.intValue
-          case varReference: VarReference =>
-            val referencedAst = statements.collect {
-              case v: VarDeclaration if v.identifierToken == varReference.identifierToken => v.expression
-            }.headOption
-
-            eval(referencedAst.getOrElse(throw new RuntimeException(s"Cannot find referenced var $varReference")), statements)
-        }
-      case operatorNode: OperatorNode =>
-        val left = eval(operatorNode.left, statements)
-        val right = eval(operatorNode.right, statements)
-        operatorNode.operatorToken match {
-          case Plus => left + right
-          case Minus => left - right
-          case Divide => left / right
-          case Multiply => left * right
-        }
-    }
-
   def expressionTokens(tokens: Seq[Token]): Either[ParseError, Seq[ExpressionToken]] =
     tokens.foldLeft(Right(Seq()): Either[ParseError, Seq[ExpressionToken]]) { (memo, token) =>
       memo.right.flatMap { expressionTokens =>

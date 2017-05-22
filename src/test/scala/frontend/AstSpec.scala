@@ -1,6 +1,6 @@
 package frontend
 
-import frontend.Token.ExpressionToken
+import frontend.Token._
 import org.specs2.mutable.Specification
 
 class AstSpec extends Specification {
@@ -54,7 +54,7 @@ class AstSpec extends Specification {
         }
         val postfix = ast.toPostfix(expressionTokens)
         val astRoot = ast.toAst(postfix).right.get
-        ast.eval(astRoot, Nil) should equalTo(expectedEvalResult)
+        eval(astRoot, Nil) should equalTo(expectedEvalResult)
       }
     }
   }
@@ -74,4 +74,27 @@ class AstSpec extends Specification {
       }
     }
   }
+
+  def eval(rootNode: AstNode, statements: Seq[StatementSequence]): Int =
+    rootNode match {
+      case operandNode: OperandNode =>
+        operandNode.operandToken match {
+          case intToken: IntToken => intToken.intValue
+          case varReference: VarReference =>
+            val referencedAst = statements.collect {
+              case v: VarDeclaration if v.identifierToken == varReference.identifierToken => v.expression
+            }.headOption
+
+            eval(referencedAst.getOrElse(throw new RuntimeException(s"Cannot find referenced var $varReference")), statements)
+        }
+      case operatorNode: OperatorNode =>
+        val left = eval(operatorNode.left, statements)
+        val right = eval(operatorNode.right, statements)
+        operatorNode.operatorToken match {
+          case Plus => left + right
+          case Minus => left - right
+          case Divide => left / right
+          case Multiply => left * right
+        }
+    }
 }
