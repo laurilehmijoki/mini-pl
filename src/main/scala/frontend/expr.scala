@@ -35,33 +35,7 @@ object expr {
     }
     outputStack.pushAll(operatorStack).toList.reverse
   }
-
-  def toPostfix(astNode: Expression): String =
-    astNode match {
-      case operand: OperandNode =>
-        operand.operandToken.token
-      case operator: OperatorNode =>
-        s"${toPostfix(operator.left)} ${toPostfix(operator.right)} ${operator.operatorToken.token}"
-    }
-
-  def toInfix(postfix: Seq[ExpressionToken]): String = {
-    val stack = mutable.Stack[String]()
-    postfix.foreach {
-      case identifierToken: IdentifierToken =>
-        stack push identifierToken.token
-      case operand: OperandToken =>
-        stack push operand.token
-      case operator: OperatorToken =>
-        val str = (operator, stack.pop(), stack.pop()) match {
-          case (Plus() | Minus(), first, second) => s"$second ${operator.token} $first"
-          case (Multiply() | Divide(), first, second) => s"($second) ${operator.token} ($first)"
-        }
-        stack push str
-    }
-
-    stack.mkString
-  }
-
+  
   @tailrec
   def toExpression(postfixTokens: List[ExpressionToken], stack: List[Expression] = Nil): Either[ParseError, Expression] =
     postfixTokens match {
