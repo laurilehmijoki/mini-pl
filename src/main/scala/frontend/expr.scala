@@ -9,7 +9,7 @@ sealed trait Expression
 case class OperandNode(operandToken: OperandToken) extends Expression
 case class OperatorNode(operatorToken: OperatorToken, left: Expression, right: Expression) extends Expression
 
-object expression {
+object expr {
 
   /**
     * https://en.wikipedia.org/wiki/Shunting-yard_algorithm
@@ -63,16 +63,15 @@ object expression {
   }
 
   @tailrec
-  def toAst(postfixTokens: List[ExpressionToken], stack: List[Expression] = Nil): Either[ParseError, Expression] =
+  def toExpression(postfixTokens: List[ExpressionToken], stack: List[Expression] = Nil): Either[ParseError, Expression] =
     postfixTokens match {
       case headToken +: tail =>
         headToken match {
-          case operand: OperandToken => toAst(tail, OperandNode(operand) +: stack)
-          case identifier: IdentifierToken => toAst(tail, OperandNode(VarReference(identifier)) +: stack)
+          case operand: OperandToken => toExpression(tail, OperandNode(operand) +: stack)
           case operator: OperatorToken =>
             stack match {
               case first +: second +: stackTail =>
-                toAst(tail, OperatorNode(operator, second, first) +: stackTail)
+                toExpression(tail, OperatorNode(operator, second, first) +: stackTail)
               case _ =>
                 Left(OperatorAtInvalidPosition(stack, operator))
             }

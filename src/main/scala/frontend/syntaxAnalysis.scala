@@ -79,8 +79,8 @@ object Print {
   def parse(tokens: Seq[Token]): StatementParseResult =
     (
       for {
-        expressionTokens <- expression.expressionTokens(tokens)
-        astRoot <- expression.toAst(expression.toPostfix(expressionTokens))
+        expressionTokens <- expr.expressionTokens(tokens)
+        astRoot <- expr.toExpression(expr.toPostfix(expressionTokens))
       } yield Print(astRoot)
     )
       .left.map { _ :: Nil }
@@ -112,8 +112,8 @@ object VarDeclaration {
         }
 
         val expressionOrError: Either[ParseError, Expression] = for {
-          expressionTokens <- expression.expressionTokens(tail)
-          astRoot <- expression.toAst(expression.toPostfix(expressionTokens))
+          expressionTokens <- expr.expressionTokens(tail)
+          astRoot <- expr.toExpression(expr.toPostfix(expressionTokens))
         } yield astRoot
 
         identifierOrError :: typePrefixOrError :: typeOrError :: assignmentOrError :: expressionOrError :: Nil match {

@@ -3,6 +3,8 @@ package frontend
 import frontend.Token._
 import org.specs2.mutable.Specification
 
+import scala.collection.mutable
+
 class ExpressionSpec extends Specification {
 
  Seq(
@@ -52,9 +54,9 @@ class ExpressionSpec extends Specification {
         val expressionTokens = Token.tokenize(expressionString).collect {
           case expressionToken: ExpressionToken => expressionToken
         }
-        val postfix = expression.toPostfix(expressionTokens)
-        val astRoot = expression.toAst(postfix).right.get
-        eval(astRoot, Nil) should equalTo(expectedEvalResult)
+        val postfix = expr.toPostfix(expressionTokens)
+        val astRoot = expr.toExpression(postfix).right.get
+        astUtils.evaluate(astRoot, Map()) should equalTo(IntegerValue(expectedEvalResult))
       }
     }
   }
@@ -67,34 +69,11 @@ class ExpressionSpec extends Specification {
         val expressionTokens = Token.tokenize(invalidExpression).collect {
           case expressionToken: ExpressionToken => expressionToken
         }
-        expression.toAst(expression.toPostfix(expressionTokens)).left.get match {
+        expr.toExpression(expr.toPostfix(expressionTokens)).left.get match {
           case invalidStack: OperatorAtInvalidPosition =>
             invalidStack.operatorToken should equalTo(Token.Multiply)
         }
       }
     }
   }
-
-  def eval(rootNode: Expression, statements: Seq[StatementSequence]): Int =
-    rootNode match {
-      case operandNode: OperandNode =>
-        operandNode.operandToken match {
-          case intToken: IntToken => intToken.intValue
-          case varReference: VarReference =>
-            val referencedAst = statements.collect {
-              case v: VarDeclaration if v.identifierToken == varReference.identifierToken => v.expression
-            }.headOption
-
-            eval(referencedAst.getOrElse(throw new RuntimeException(s"Cannot find referenced var $varReference")), statements)
-        }
-      case operatorNode: OperatorNode =>
-        val left = eval(operatorNode.left, statements)
-        val right = eval(operatorNode.right, statements)
-        operatorNode.operatorToken match {
-          case Plus => left + right
-          case Minus => left - right
-          case Divide => left / right
-          case Multiply => left * right
-        }
-    }
 }
