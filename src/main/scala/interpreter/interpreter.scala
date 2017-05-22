@@ -19,8 +19,14 @@ object interpreter {
                                |""".stripMargin
 
   val printUndeclaredIdentifier = """
+                  |var foo : int := 1 + z;
                   |print z;
                   |""".stripMargin
+
+  val duplicateDeclaration = """
+                                    |var foo : int := 2;
+                                    |var foo : int := 3;
+                                    |""".stripMargin
 
   def main(args: Array[String]) = {
     System.exit(interpret(printUndeclaredIdentifier))

@@ -10,21 +10,12 @@ object SemanticAnalysis {
       lazy val statementsBeforeThisStatement = statements.take(index)
       statement match {
         case print: Print =>
-          lazy val identifiersInPrintExpression = findIdentifiers(print.expression).toSet
-          identifiersInPrintExpression.flatMap { identifier =>
-            val identifierIsDeclared = statementsBeforeThisStatement.exists {
-              case varDeclaration: VarDeclaration if identifiersInPrintExpression.contains(varDeclaration.identifierToken) => true
-            }
-            if (identifierIsDeclared)
-              Nil
-            else
-              IdentifierNotDeclared(identifier) :: Nil
-          }
+          resolveUndeclaredIdentifiers(print, statementsBeforeThisStatement)
         case varDeclaration: VarDeclaration =>
           statementsBeforeThisStatement.collect {
             case another: VarDeclaration if another.identifierToken == varDeclaration.identifierToken =>
               TokenAlreadyDeclared(varDeclaration.identifierToken, another)
-          }
+          } ++ resolveUndeclaredIdentifiers(varDeclaration, statementsBeforeThisStatement)
       }
     }) match {
       case Nil => Right(VerifiedProgram(statements))
@@ -41,5 +32,25 @@ object SemanticAnalysis {
       case operator: OperatorNode =>
         findIdentifiers(operator.left) ++ findIdentifiers(operator.right)
     }
+
+  def findIdentifiers(statementSequence: StatementSequence): Seq[IdentifierToken] =
+    statementSequence match {
+      case print: Print => findIdentifiers(print.expression)
+      case varDeclaration: VarDeclaration => findIdentifiers(varDeclaration.expression)
+    }
+
+  private def resolveUndeclaredIdentifiers(statementSequence: StatementSequence, statementsBeforeThisStatement: Seq[StatementSequence]) = {
+    lazy val referencedIdentifiersInThisStatement = findIdentifiers(statementSequence).toSet
+    referencedIdentifiersInThisStatement.flatMap { identifier =>
+      val identifierIsDeclared = statementsBeforeThisStatement.exists {
+        case varDeclaration: VarDeclaration => referencedIdentifiersInThisStatement.contains(varDeclaration.identifierToken)
+        case Print(_) => false
+      }
+      if (identifierIsDeclared)
+        Nil
+      else
+        IdentifierNotDeclared(identifier) :: Nil
+    }
+  }
 
 }
