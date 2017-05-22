@@ -73,6 +73,7 @@ object StatementSequence {
   }
 }
 
+// "print" <expr>
 case class Print(expression: Expression) extends StatementSequence
 
 object Print {
