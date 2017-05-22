@@ -62,13 +62,6 @@ object ast {
     stack.mkString
   }
 
-  def main(args: Array[String]) = {
-    //println(toInfix(IntToken(1) :: IntToken(2) :: Plus :: IntToken(3) :: IntToken(4) :: Divide :: Plus :: Nil))
-    val postfix = toPostfix(IntToken(1) :: IntToken(2) :: Plus :: IntToken(3) :: IntToken(4) :: Divide :: Plus :: Nil)
-    val x = toPostfix(ast.toAst(postfix).right.get)
-    println(x)
-  }
-
   @tailrec
   def toAst(postfixTokens: List[ExpressionToken], stack: List[AstNode] = Nil): Either[ParseError, AstNode] =
     postfixTokens match {
