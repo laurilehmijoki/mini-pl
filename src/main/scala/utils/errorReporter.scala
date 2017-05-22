@@ -5,7 +5,7 @@ import utils.extensions.FormattedString
 
 object errorReporter {
 
-  def createErrorReport(program: String, errors: Seq[ParseError]): String = {
+  def createErrorReport(program: String, errors: Seq[CompilationError]): String = {
     lazy val indexesToHighlight: Set[Int] = errors.flatMap {
       tokensAssociatedWithError
     }.flatMap { token =>
@@ -22,7 +22,11 @@ object errorReporter {
         chr.toString
     }.mkString
 
-    def headlinesAndDescriptions(parseErrors: Seq[ParseError]): Seq[(String, String)] = parseErrors.flatMap {
+    def headlinesAndDescriptions(parseErrors: Seq[CompilationError]): Seq[(String, String)] = parseErrors.flatMap {
+      case e: TokenAlreadyDeclared =>
+        ("Syntax error", "Token is already declared") :: Nil
+      case e: IdentifierNotDeclared =>
+        ("Syntax error", s"""Identifier "${e.identifierToken.token}" is not declared""") :: Nil
       case e: SyntaxError =>
         ("Syntax error", e.message) :: Nil
       case manyErrors: ManyErrors => headlinesAndDescriptions(manyErrors.errors)
@@ -39,8 +43,12 @@ object errorReporter {
     s"$headlines\n$highlightedSourceCode"
   }
 
-  def tokensAssociatedWithError(e: ParseError): Seq[Token] =
+  def tokensAssociatedWithError(e: CompilationError): Seq[Token] =
     e match {
+      case e: TokenAlreadyDeclared =>
+        e.conflictingToken :: Nil
+      case e: IdentifierNotDeclared =>
+        e.identifierToken :: Nil
       case syntaxError: SyntaxError =>
         syntaxError.tokens
       case OperatorAtInvalidPosition(_, _) | MalformedStack(_) =>

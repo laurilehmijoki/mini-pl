@@ -18,9 +18,12 @@ object interpreter {
                                |print foo;
                                |""".stripMargin
 
+  val printUndeclaredIdentifier = """
+                  |print z;
+                  |""".stripMargin
 
   def main(args: Array[String]) = {
-    System.exit(interpret(program))
+    System.exit(interpret(printUndeclaredIdentifier))
   }
 
   def interpret(program: String): Int = {
@@ -35,9 +38,9 @@ object interpreter {
           memo.right.map { _ :+ statementSequences}
       }
     }
-    val exitStatus = parseResult.right.map(astUtils.build) match {
-      case Left(err: Seq[ParseError]) =>
-
+    val verifiedProgram = parseResult.right.flatMap(SemanticAnalysis.verify)
+    val exitStatus = verifiedProgram.right.map(program => astUtils.build(program.statements)) match {
+      case Left(err: Seq[CompilationError]) =>
         println(errorReporter.createErrorReport(program, err))
         1
       case Right(ast) =>

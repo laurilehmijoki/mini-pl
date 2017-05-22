@@ -60,20 +60,4 @@ class ExpressionSpec extends Specification {
       }
     }
   }
-
-  Seq(
-    "1 * *"
-  ) foreach { invalidExpression =>
-    invalidExpression should {
-      s"result in an error" in {
-        val expressionTokens = Token.tokenize(invalidExpression).collect {
-          case expressionToken: ExpressionToken => expressionToken
-        }
-        expr.toExpression(expr.toPostfix(expressionTokens)).left.get match {
-          case invalidStack: OperatorAtInvalidPosition =>
-            invalidStack.operatorToken should equalTo(Token.Multiply)
-        }
-      }
-    }
-  }
 }

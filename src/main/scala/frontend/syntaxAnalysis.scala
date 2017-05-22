@@ -128,10 +128,3 @@ object VarDeclaration {
       case x => Left(SyntaxError(tokens, s"Invalid var declaration $x") :: Nil)
     }
 }
-
-sealed trait ParseError
-
-case class SyntaxError(tokens: Seq[Token], message: String) extends ParseError
-case class ManyErrors(errors: Seq[ParseError]) extends ParseError
-case class OperatorAtInvalidPosition(stack: List[Expression], operatorToken: OperatorToken) extends ParseError
-case class MalformedStack(stack: List[Expression]) extends ParseError
