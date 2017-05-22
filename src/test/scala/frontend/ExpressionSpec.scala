@@ -3,7 +3,7 @@ package frontend
 import frontend.Token._
 import org.specs2.mutable.Specification
 
-import scala.collection.mutable
+import interpreter.interpreter._
 
 class ExpressionSpec extends Specification {
 
@@ -56,7 +56,7 @@ class ExpressionSpec extends Specification {
         }
         val postfix = expr.toPostfix(expressionTokens)
         val astRoot = expr.toExpression(postfix).right.get
-        astUtils.evaluate(astRoot, Map()) should equalTo(IntegerValue(expectedEvalResult))
+        evaluate(astRoot, Map()) should equalTo(IntegerValue(expectedEvalResult))
       }
     }
   }
