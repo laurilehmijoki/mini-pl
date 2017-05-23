@@ -13,7 +13,7 @@ sealed trait Token {
 
 object Token {
   val intToken = "(\\d+)".r
-  val stringToken = """(".*")""".r
+  val stringToken = """("(.*)")""".r
   val identifierToken = "([a-zA-Z]+)".r
 
   case class TokenCandidate(string: String, startIndex: Int)
@@ -64,7 +64,7 @@ object Token {
       case t@"int" => IntTypeKeyword(t)
       case t@"string" => StringTypeKeyword(t)
       case intToken(intCandidate) => Try(intCandidate.toInt).toOption.map(IntToken(_)).getOrElse(Unrecognised(intCandidate))
-      case stringToken(string) => StringToken(string)
+      case stringToken(token, containedString) => StringToken(token, containedString)
       case identifierToken(identifier) => IdentifierToken(identifier)
       case t@":=" => AssignmentToken(t)
       case t@";" => SemicolonToken(t)
@@ -108,7 +108,7 @@ object Token {
     override def token: String = intValue.toString
   }
 
-  case class StringToken(token: String)(implicit val tokenLocation: TokenLocation) extends OperandToken with Terminal
+  case class StringToken(token: String, containedString: String)(implicit val tokenLocation: TokenLocation) extends OperandToken with Terminal
 
   sealed trait Keyword extends Token
   case class VarKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword

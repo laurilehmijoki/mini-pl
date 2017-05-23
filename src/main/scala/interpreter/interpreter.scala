@@ -43,8 +43,13 @@ object interpreter {
                                     |var foo : int := 3;
                                     |""".stripMargin
 
+  val stringConcatenation = """
+                               |var foo : string := "a" + "b";
+                               |print foo;
+                               |""".stripMargin
+
   def main(args: Array[String]) = {
-    System.exit(interpret(printUndeclaredIdentifier))
+    System.exit(interpret(stringConcatenation))
   }
 
   def interpret(program: String): Int = {
@@ -99,7 +104,7 @@ object interpreter {
       case operandNode: OperandNode =>
         operandNode.operandToken match {
           case intToken: IntToken => IntegerValue(intToken.intValue)
-          case stringToken: StringToken => StringValue(stringToken.token)
+          case stringToken: StringToken => StringValue(stringToken.containedString)
           case identifier: IdentifierToken =>
             symbols.getOrElse(identifier, throw new RuntimeException(s"Cannot find symbol $identifier"))
         }
@@ -113,6 +118,13 @@ object interpreter {
               case Multiply() => left * right
             }
             IntegerValue(intResult)
+          case (StringValue(left), StringValue(right)) =>
+            val result = operatorNode.operatorToken match {
+              case Plus() => left + right
+              case Minus() | Divide() | Multiply () =>
+                s"Cannot apply $operatorNode on (${operatorNode.left}, ${operatorNode.right})"
+            }
+            StringValue(result)
           case _ =>
             throw new RuntimeException(s"Cannot apply $operatorNode on (${operatorNode.left}, ${operatorNode.right})")
         }
