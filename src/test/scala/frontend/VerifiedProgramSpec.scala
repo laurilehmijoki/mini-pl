@@ -29,7 +29,7 @@ class VerifiedProgramSpec extends Specification {
     )
   ) foreach Function.tupled { (program, x) =>
     s"verifier" should {
-      s"should correctly verify $program" in {
+      s"correctly verify $program" in {
         frontendHelper.verify(program) should beLike(x)
       }
     }
