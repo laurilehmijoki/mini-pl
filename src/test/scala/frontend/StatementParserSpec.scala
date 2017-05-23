@@ -31,7 +31,7 @@ class StatementParserSpec extends Specification {
         s"parse '$statementString' correctly" in {
           val tokens = Token.tokenize(statementString)
           StatementSequence.parse(tokens) match {
-            case head +: Nil => head.right.get should equalTo(statementSequence)
+            case Right(head) +: Nil => head should equalTo(statementSequence)
           }
         }
       }
