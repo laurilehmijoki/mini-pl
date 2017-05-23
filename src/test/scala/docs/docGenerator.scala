@@ -80,12 +80,12 @@ ${
         failureReportOrSymbolTableAndStdout.fold(
           error =>
             s"""
-               |* ${"compilation fails".red}
+               |* compilation `${"fails".red}`
                |  * error: $error
           """.stripMargin,
           Function.tupled((symbolTable: SymbolTable, stdOut: String) =>
             s"""
-               |* ${"compilation succeeds".green}
+               |* compilation `${"succeeds".green}`
                |* standard output is
                |```
                |$stdOut```
