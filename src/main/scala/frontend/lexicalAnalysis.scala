@@ -69,10 +69,10 @@ object Token {
       case t@":=" => AssignmentToken(t)
       case t@";" => SemicolonToken(t)
       case t@":" => TypePrefixToken(t)
-      case "+" => Plus()
-      case "-" => Minus()
-      case "*" => Multiply()
-      case "/" => Divide()
+      case t@"+" => Plus(t)
+      case t@"-" => Minus(t)
+      case t@"*" => Multiply(t)
+      case t@"/" => Divide(t)
       case unrecognised => Unrecognised(unrecognised)
     }
   }
@@ -91,18 +91,10 @@ object Token {
 
   sealed trait Terminal
 
-  case class Plus(implicit val tokenLocation: TokenLocation) extends OperatorToken {
-    override def token: String = "+"
-  }
-  case class Minus(implicit val tokenLocation: TokenLocation) extends OperatorToken {
-    override def token: String = "-"
-  }
-  case class Multiply(implicit val tokenLocation: TokenLocation) extends OperatorToken {
-    override def token: String = "*"
-  }
-  case class Divide(implicit val tokenLocation: TokenLocation) extends OperatorToken {
-    override def token: String = "/"
-  }
+  case class Plus(token: String)(implicit val tokenLocation: TokenLocation) extends OperatorToken
+  case class Minus(token: String)(implicit val tokenLocation: TokenLocation) extends OperatorToken
+  case class Multiply(token: String)(implicit val tokenLocation: TokenLocation) extends OperatorToken
+  case class Divide(token: String)(implicit val tokenLocation: TokenLocation) extends OperatorToken
   case class IdentifierToken(token: String)(implicit val tokenLocation: TokenLocation) extends OperandToken
   case class IntToken(intValue: Int)(implicit val tokenLocation: TokenLocation) extends OperandToken with Terminal {
     override def token: String = intValue.toString

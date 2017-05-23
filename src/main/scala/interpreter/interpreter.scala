@@ -112,16 +112,16 @@ object interpreter {
         (evaluate(operatorNode.left, symbols), evaluate(operatorNode.right, symbols)) match {
           case (IntegerValue(left), IntegerValue(right)) =>
             val intResult = operatorNode.operatorToken match {
-              case Plus() => left + right
-              case Minus() => left - right
-              case Divide() => left / right
-              case Multiply() => left * right
+              case Plus(_) => left + right
+              case Minus(_) => left - right
+              case Divide(_) => left / right
+              case Multiply(_) => left * right
             }
             IntegerValue(intResult)
           case (StringValue(left), StringValue(right)) =>
             val result = operatorNode.operatorToken match {
-              case Plus() => left + right
-              case Minus() | Divide() | Multiply () =>
+              case Plus(_) => left + right
+              case Minus(_) | Divide(_) | Multiply (_) =>
                 s"Cannot apply $operatorNode on (${operatorNode.left}, ${operatorNode.right})"
             }
             StringValue(result)

@@ -19,7 +19,7 @@ class StatementParserSpec extends Specification {
         "var foo : int := 1 + 2 * 3;",
         VarDeclaration(IdentifierToken("foo"),
           IntTypeKeyword("int"),
-          OperatorNode(Plus(), OperandNode(IntToken(1)), OperatorNode(Multiply(), OperandNode(IntToken(2)), OperandNode(IntToken(3))))
+          OperatorNode(Plus("+"), OperandNode(IntToken(1)), OperatorNode(Multiply("*"), OperandNode(IntToken(2)), OperandNode(IntToken(3))))
         )
       ),
       (
