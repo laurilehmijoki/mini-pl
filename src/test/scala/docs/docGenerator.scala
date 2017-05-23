@@ -1,5 +1,12 @@
 package docs
 
+import java.io.{ByteArrayOutputStream, PrintStream}
+
+import frontend.Token.IdentifierToken
+import frontend.{CompilationError, frontendHelper}
+import interpreter.SymbolValue
+import interpreter.interpreter._
+
 object docGenerator {
   def main(args: Array[String]): Unit = {
     val readmeMarkdown =
@@ -38,15 +45,8 @@ Source: https://www.cs.helsinki.fi/u/vihavain/k16/Compilers/project/miniplsyntax
 
 ## Examples of results after lexical, syntactic and semantic analyses
 
-${samples.samplePrograms.programs.map(Function.tupled({ (description, program, _) =>
-s"""
-### $description
+$programsToMarkdown
 
-```
-${program.trim()}
-```
-"""
-})).mkString}
 ## Author
 
 Lauri Lehmijoki
@@ -58,4 +58,53 @@ MIT
     println(readmeMarkdown)
   }
 
+  def programsToMarkdown = {
+    samples.samplePrograms.programs.map(Function.tupled({ (description, program, _) =>
+      val failureReportOrSymbolTableAndStdout: Either[Seq[CompilationError], (SymbolTable, String)] = frontendHelper.verify(program)
+        .right
+        .map { verifiedProgram =>
+          val baos = new ByteArrayOutputStream()
+          val symbolTable = interpret(verifiedProgram, new PrintStream(baos))
+          (symbolTable, new String(baos.toByteArray, "utf-8"))
+        }
+
+      s"""
+### $description
+
+```
+${program.trim()}
+```
+
+${
+        failureReportOrSymbolTableAndStdout.fold(
+          error =>
+            s"""
+               |* compilation fails
+               |  * error: $error
+          """.stripMargin,
+          Function.tupled((symbolTable: SymbolTable, stdOut: String) =>
+            s"""
+               |* compilation succeeds
+               |* standard output is
+               |```
+               |$stdOut```
+               |* interpretation results in the following symbol table
+               |${
+              symbolTable.foldLeft(None: Option[String]) { (markdown, symbolTableEntry) =>
+                val entryAsMarkdown =
+                  s"  * ${symbolTableEntry._1.token} -> ${symbolTableEntry._2}"
+                markdown match {
+                  case None =>
+                    Some(entryAsMarkdown)
+                  case Some(previousEntry) => Some(
+                    previousEntry :: entryAsMarkdown :: Nil mkString "\n"
+                  )
+                }
+              }.getOrElse("  * [empty symbol table]")
+            }""".stripMargin
+          ))
+      }
+"""
+    })).mkString
+  }
 }

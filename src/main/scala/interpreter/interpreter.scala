@@ -1,5 +1,7 @@
 package interpreter
 
+import java.io.PrintStream
+
 import frontend.Token._
 import frontend._
 import utils.errorReporter
@@ -49,25 +51,30 @@ object interpreter {
                                |""".stripMargin
 
   def main(args: Array[String]) = {
-    System.exit(interpret(typeAssignmentError))
+    System.exit(interpret(typeAssignmentError, System.out))
   }
 
-  def interpret(program: String): Int = {
+  def interpret(program: String, systemOut: PrintStream): Int = {
     val verifiedProgram = frontendHelper.verify(program)
     val exitStatus = verifiedProgram.right.map(program => astUtils.build(program.statements)) match {
       case Left(err: Seq[CompilationError]) =>
         println(errorReporter.createErrorReport(program, err))
         1
       case Right(ast) =>
-        visit(ast)
+        visit(ast, systemOut)
         0
     }
     exitStatus
   }
 
+  def interpret(verifiedProgram: VerifiedProgram, systemOut: PrintStream): SymbolTable = {
+    val ast = astUtils.build(verifiedProgram.statements)
+    visit(ast, systemOut)
+  }
+
   type SymbolTable = Map[IdentifierToken, SymbolValue]
 
-  def visit(ast: Ast, symbols: SymbolTable = Map()): SymbolTable =
+  def visit(ast: Ast, systemOut: PrintStream, symbols: SymbolTable = Map()): SymbolTable =
     ast match {
       case EmptyNode => symbols
       case ast: AstNode =>
@@ -77,14 +84,14 @@ object interpreter {
           case p: Print =>
             val symbolValue = evaluate(p.expression, symbols)
             symbolValue match {
-              case i: IntegerValue => println(i.value)
-              case s: StringValue => println(s.value)
+              case i: IntegerValue => systemOut.println(i.value)
+              case s: StringValue => systemOut.println(s.value)
             }
             symbols
         }
 
         ast.children.foldLeft(symbolsAfterStatement) { (syms, node) =>
-          visit(node, syms)
+          visit(node, systemOut, syms)
         }
     }
 

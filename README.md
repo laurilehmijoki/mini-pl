@@ -43,12 +43,22 @@ print foo;
 baz
 ```
 
+
+* compilation fails
+  * error: List(ParserNotFound(List(IdentifierToken(baz))))
+          
+
 ### A program with duplicate var declarations
 
 ```
 var foo : int := 2;
 var foo : int := 3;
 ```
+
+
+* compilation fails
+  * error: List(IdentifierAlreadyDeclared(IdentifierToken(foo),VarDeclaration(IdentifierToken(foo),IntTypeKeyword(int),OperandNode(IntToken(2)))))
+          
 
 ### A program where the user assigns an integer into string
 
@@ -58,6 +68,11 @@ var foo : int := 1 + z;
 print foo;
 ```
 
+
+* compilation fails
+  * error: List(IncompatibleTypes(OperandNode(IntToken(3)),class frontend.Token$IntToken,class frontend.Token$StringToken), InvalidExpression(OperatorNode(Plus(+),OperandNode(IntToken(1)),OperandNode(IdentifierToken(z)))))
+          
+
 ### A program where the user assigns the value of the integer identifier to a string identifier
 
 ```
@@ -65,6 +80,11 @@ var z : int := 3;
 var foo : string := z;
 print foo;
 ```
+
+
+* compilation fails
+  * error: List(IncompatibleTypes(OperandNode(IdentifierToken(z)),class frontend.Token$IntToken,class frontend.Token$StringToken))
+          
 
 ### A correct program with integer arithmetics
 
@@ -74,6 +94,16 @@ var foo : int := 1 + z;
 print foo;
 ```
 
+
+* compilation succeeds
+* standard output is
+```
+26
+```
+* interpretation results in the following symbol table
+  * z -> IntegerValue(25)
+  * foo -> IntegerValue(26)
+
 ### A correct program with string concatenation
 
 ```
@@ -81,6 +111,17 @@ var z : string := "foo";
 var foo : string := z + "bar";
 print foo;
 ```
+
+
+* compilation succeeds
+* standard output is
+```
+foobar
+```
+* interpretation results in the following symbol table
+  * z -> StringValue(foo)
+  * foo -> StringValue(foobar)
+
 
 ## Author
 
