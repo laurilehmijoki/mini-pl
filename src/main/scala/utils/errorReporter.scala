@@ -17,7 +17,7 @@ object errorReporter {
       val chr = xs._1
       val position = xs._2
       if (indexesToHighlight.contains(position))
-        chr.toString.red
+        chr.toString.error
       else
         chr.toString
     }.mkString

@@ -44,7 +44,7 @@ baz
 ```
 
 
-* compilation `<span style="color: #ff0033;">fails</span>`
+* compilation ___fails___
   * error: List(ParserNotFound(List(IdentifierToken(baz))))
           
 
@@ -56,7 +56,7 @@ var foo : int := 3;
 ```
 
 
-* compilation `<span style="color: #ff0033;">fails</span>`
+* compilation ___fails___
   * error: List(IdentifierAlreadyDeclared(IdentifierToken(foo),VarDeclaration(IdentifierToken(foo),IntTypeKeyword(int),OperandNode(IntToken(2)))))
           
 
@@ -69,7 +69,7 @@ print foo;
 ```
 
 
-* compilation `<span style="color: #ff0033;">fails</span>`
+* compilation ___fails___
   * error: List(IncompatibleTypes(OperandNode(IntToken(3)),class frontend.Token$IntToken,class frontend.Token$StringToken), InvalidExpression(OperatorNode(Plus(+),OperandNode(IntToken(1)),OperandNode(IdentifierToken(z)))))
           
 
@@ -82,7 +82,7 @@ print foo;
 ```
 
 
-* compilation `<span style="color: #ff0033;">fails</span>`
+* compilation ___fails___
   * error: List(IncompatibleTypes(OperandNode(IdentifierToken(z)),class frontend.Token$IntToken,class frontend.Token$StringToken))
           
 
@@ -95,7 +95,7 @@ print foo;
 ```
 
 
-* compilation `<span style="color: #42d647;">succeeds</span>`
+* compilation __succeeds__
 * standard output is
 ```
 26
@@ -113,7 +113,7 @@ print foo;
 ```
 
 
-* compilation `<span style="color: #42d647;">succeeds</span>`
+* compilation __succeeds__
 * standard output is
 ```
 foobar

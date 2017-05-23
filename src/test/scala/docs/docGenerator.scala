@@ -4,7 +4,7 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 
 import frontend.{CompilationError, frontendHelper}
 import interpreter.interpreter._
-import utils.{FormattingContext, Html}
+import utils.{FormattingContext, Markdown}
 import utils.extensions.FormattedString
 
 object docGenerator {
@@ -59,7 +59,7 @@ MIT
   }
 
   def programsToMarkdown = {
-    implicit val formattingContext: FormattingContext = Html
+    implicit val formattingContext: FormattingContext = Markdown
     samples.samplePrograms.programs.map(Function.tupled({ (description, program, _) =>
       val failureReportOrSymbolTableAndStdout: Either[Seq[CompilationError], (SymbolTable, String)] = frontendHelper.verify(program)
         .right
@@ -80,12 +80,12 @@ ${
         failureReportOrSymbolTableAndStdout.fold(
           error =>
             s"""
-               |* compilation `${"fails".red}`
+               |* compilation ${"fails".error}
                |  * error: $error
           """.stripMargin,
           Function.tupled((symbolTable: SymbolTable, stdOut: String) =>
             s"""
-               |* compilation `${"succeeds".green}`
+               |* compilation ${"succeeds".highlighted}
                |* standard output is
                |```
                |$stdOut```
