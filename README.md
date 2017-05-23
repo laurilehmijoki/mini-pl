@@ -101,8 +101,8 @@ print foo;
 26
 ```
 * interpretation results in the following symbol table
-  * z -> IntegerValue(25)
-  * foo -> IntegerValue(26)
+  * `z` -> `25`
+  * `foo` -> `26`
 
 ### A correct program with string concatenation
 
@@ -119,8 +119,8 @@ print foo;
 foobar
 ```
 * interpretation results in the following symbol table
-  * z -> StringValue(foo)
-  * foo -> StringValue(foobar)
+  * `z` -> `foo`
+  * `foo` -> `foobar`
 
 
 ## Author

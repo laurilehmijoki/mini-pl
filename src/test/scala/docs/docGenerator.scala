@@ -3,6 +3,7 @@ package docs
 import java.io.{ByteArrayOutputStream, PrintStream}
 
 import frontend.{CompilationError, frontendHelper}
+import interpreter.{IntegerValue, StringValue}
 import interpreter.interpreter._
 import utils.{FormattingContext, Markdown}
 import utils.extensions.FormattedString
@@ -92,8 +93,12 @@ ${
                |* interpretation results in the following symbol table
                |${
               symbolTable.foldLeft(None: Option[String]) { (markdown, symbolTableEntry) =>
+                val symbolValue = symbolTableEntry._2 match {
+                  case intValue: IntegerValue => intValue.value.toString
+                  case stringValue: StringValue => stringValue.value.toString
+                }
                 val entryAsMarkdown =
-                  s"  * ${symbolTableEntry._1.token} -> ${symbolTableEntry._2}"
+                  s"  * `${symbolTableEntry._1.token}` -> `$symbolValue`"
                 markdown match {
                   case None =>
                     Some(entryAsMarkdown)
