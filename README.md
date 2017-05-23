@@ -37,61 +37,49 @@ Source: https://www.cs.helsinki.fi/u/vihavain/k16/Compilers/project/miniplsyntax
 ### A program with unrecognised statement
 
 ```
-
 var z : int := 3;
 var foo : int := 1 + "";
 print foo;
 baz
-
 ```
 
 ### A program with duplicate var declarations
 
 ```
-
 var foo : int := 2;
 var foo : int := 3;
-
 ```
 
 ### A program where the user assigns an integer into string
 
 ```
-
 var z : string := 3;
 var foo : int := 1 + z;
 print foo;
-
 ```
 
 ### A program where the user assigns the value of the integer identifier to a string identifier
 
 ```
-
 var z : int := 3;
 var foo : string := z;
 print foo;
-
 ```
 
 ### A correct program with integer arithmetics
 
 ```
-
 var z : int := 1 + 2 * 3 * 4;
 var foo : int := 1 + z;
 print foo;
-
 ```
 
 ### A correct program with string concatenation
 
 ```
-
 var z : string := "foo";
 var foo : string := z + "bar";
 print foo;
-
 ```
 
 ## Author

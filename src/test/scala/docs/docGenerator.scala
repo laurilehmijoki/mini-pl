@@ -43,7 +43,7 @@ s"""
 ### $description
 
 ```
-$program
+${program.trim()}
 ```
 """
 })).mkString}
