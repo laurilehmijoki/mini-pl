@@ -4,7 +4,7 @@ import java.io.PrintStream
 
 import frontend.Token._
 import frontend._
-import utils.errorReporter
+import utils.{BashShell, FormattingContext, errorReporter}
 
 sealed trait SymbolValue
 case class IntegerValue(value: Int) extends SymbolValue
@@ -51,10 +51,11 @@ object interpreter {
                                |""".stripMargin
 
   def main(args: Array[String]) = {
+    implicit val formattingContext: FormattingContext = BashShell
     System.exit(interpret(typeAssignmentError, System.out))
   }
 
-  def interpret(program: String, systemOut: PrintStream): Int = {
+  def interpret(program: String, systemOut: PrintStream)(implicit formattingContext: FormattingContext): Int = {
     val verifiedProgram = frontendHelper.verify(program)
     val exitStatus = verifiedProgram.right.map(program => astUtils.build(program.statements)) match {
       case Left(err: Seq[CompilationError]) =>

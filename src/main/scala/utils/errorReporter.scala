@@ -5,7 +5,7 @@ import utils.extensions.FormattedString
 
 object errorReporter {
 
-  def createErrorReport(program: String, errors: Seq[CompilationError]): String = {
+  def createErrorReport(program: String, errors: Seq[CompilationError])(implicit formattingContext: FormattingContext): String = {
     lazy val indexesToHighlight: Set[Int] = errors.flatMap {
       tokensAssociatedWithError
     }.flatMap { token =>

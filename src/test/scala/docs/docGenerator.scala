@@ -2,10 +2,10 @@ package docs
 
 import java.io.{ByteArrayOutputStream, PrintStream}
 
-import frontend.Token.IdentifierToken
 import frontend.{CompilationError, frontendHelper}
-import interpreter.SymbolValue
 import interpreter.interpreter._
+import utils.{FormattingContext, Html}
+import utils.extensions.FormattedString
 
 object docGenerator {
   def main(args: Array[String]): Unit = {
@@ -59,6 +59,7 @@ MIT
   }
 
   def programsToMarkdown = {
+    implicit val formattingContext: FormattingContext = Html
     samples.samplePrograms.programs.map(Function.tupled({ (description, program, _) =>
       val failureReportOrSymbolTableAndStdout: Either[Seq[CompilationError], (SymbolTable, String)] = frontendHelper.verify(program)
         .right
@@ -79,12 +80,12 @@ ${
         failureReportOrSymbolTableAndStdout.fold(
           error =>
             s"""
-               |* compilation fails
+               |* ${"compilation fails".red}
                |  * error: $error
           """.stripMargin,
           Function.tupled((symbolTable: SymbolTable, stdOut: String) =>
             s"""
-               |* compilation succeeds
+               |* ${"compilation succeeds".green}
                |* standard output is
                |```
                |$stdOut```
