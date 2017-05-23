@@ -8,4 +8,6 @@ lazy val root = (project in file("."))
 
 libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "3.8.9" % "test")
 
+scalacOptions in ThisBuild ++= Seq("-unchecked", "-deprecation")
+
 scalacOptions in Test ++= Seq("-Yrangepos")
