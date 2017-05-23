@@ -95,7 +95,10 @@ object SemanticAnalysis {
               .flatMap {
                 case varDeclaration: VarDeclaration =>
                   if (varDeclaration.identifierToken.token == i.token)
-                    findTerminalType(varDeclaration.expression, statementsBeforeThisStatement.drop(1))
+                    varDeclaration.typeKeyword match {
+                      case _: IntTypeKeyword => classOf[IntToken] :: Nil
+                      case _: StringTypeKeyword => classOf[StringToken] :: Nil
+                    }
                   else
                     Nil
                 case _: Print =>
@@ -103,7 +106,6 @@ object SemanticAnalysis {
               }
               .headOption
         }
-
     }
 
   def findIdentifiers(statementSequence: StatementSequence): Seq[IdentifierToken] =

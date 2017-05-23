@@ -38,14 +38,16 @@ object samplePrograms extends Specification {
         |print foo;
         |""".stripMargin,
       {
-        case Left(error +: Nil) => error.getClass must equalTo(classOf[IncompatibleTypes])
+        case Left(first +: second +: Nil) =>
+          first.getClass must equalTo(classOf[IncompatibleTypes])
+          second.getClass must equalTo(classOf[InvalidExpression])
       }: PartialFunction[VerificationResult, MatchResult[_]]
     ),
     (
       "A program where the user assigns the value of the integer identifier to a string identifier",
       """
         |var z : int := 3;
-        |var foo : string := 1 + z;
+        |var foo : string := z;
         |print foo;
         |""".stripMargin,
       {
