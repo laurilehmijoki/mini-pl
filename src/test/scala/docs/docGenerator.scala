@@ -5,7 +5,7 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 import frontend.{CompilationError, frontendHelper}
 import interpreter.{IntegerValue, StringValue}
 import interpreter.interpreter._
-import utils.{FormattingContext, Markdown}
+import utils.{BashShell, FormattingContext, Markdown, errorReporter}
 import utils.extensions.FormattedString
 
 object docGenerator {
@@ -96,7 +96,10 @@ ${
           error =>
             s"""
                |* compilation ${"fails".error}
-               |  * error: $error
+               |* error:
+               |```
+               |${errorReporter.createErrorReport(program, error)}
+               |```
           """.stripMargin,
           Function.tupled((symbolTable: SymbolTable, stdOut: String) =>
             s"""

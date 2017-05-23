@@ -10,13 +10,13 @@ object extensions {
     def highlighted(implicit formattingContext: FormattingContext): String =
       formattingContext match {
         case BashShell => s"\033[1m$original\033[0m"
-        case Markdown => s"""__${original}__"""
+        case Markdown => original
       }
 
     def error(implicit formattingContext: FormattingContext): String =
       formattingContext match {
         case BashShell => s"\033[31m$original\033[0m"
-        case Markdown => s"""___${original}___"""
+        case Markdown => original
       }
   }
 }

@@ -44,8 +44,17 @@ baz
 ```
 
 
-* compilation ___fails___
-  * error: List(ParserNotFound(List(IdentifierToken(baz))))
+* compilation fails
+* error:
+```
+Syntax error: Cannot find parser for tokens List(IdentifierToken(baz))
+
+var z : int := 3;
+var foo : int := 1 + "";
+print foo;
+baz
+
+```
           
 
 ### A program with duplicate var declarations
@@ -56,8 +65,15 @@ var foo : int := 3;
 ```
 
 
-* compilation ___fails___
-  * error: List(IdentifierAlreadyDeclared(IdentifierToken(foo),VarDeclaration(IdentifierToken(foo),IntTypeKeyword(int),OperandNode(IntToken(2)))))
+* compilation fails
+* error:
+```
+Syntax error: Token is already declared
+
+var foo : int := 2;
+var foo : int := 3;
+
+```
           
 
 ### A program where the user assigns an integer into string
@@ -69,8 +85,17 @@ print foo;
 ```
 
 
-* compilation ___fails___
-  * error: List(IncompatibleTypes(OperandNode(IntToken(3)),class frontend.Token$IntToken,class frontend.Token$StringToken), InvalidExpression(OperatorNode(Plus(+),OperandNode(IntToken(1)),OperandNode(IdentifierToken(z)))))
+* compilation fails
+* error:
+```
+Type error: Expected StringToken but got IntToken in expression OperandNode(IntToken(3))
+Invalid expression: OperatorNode(Plus(+),OperandNode(IntToken(1)),OperandNode(IdentifierToken(z)))
+
+var z : string := 3;
+var foo : int := 1 + z;
+print foo;
+
+```
           
 
 ### A program where the user assigns the value of the integer identifier to a string identifier
@@ -82,8 +107,16 @@ print foo;
 ```
 
 
-* compilation ___fails___
-  * error: List(IncompatibleTypes(OperandNode(IdentifierToken(z)),class frontend.Token$IntToken,class frontend.Token$StringToken))
+* compilation fails
+* error:
+```
+Type error: Expected StringToken but got IntToken in expression OperandNode(IdentifierToken(z))
+
+var z : int := 3;
+var foo : string := z;
+print foo;
+
+```
           
 
 ### A correct program with integer arithmetics
@@ -95,7 +128,7 @@ print foo;
 ```
 
 
-* compilation __succeeds__
+* compilation succeeds
 * standard output is
 ```
 26
@@ -113,7 +146,7 @@ print foo;
 ```
 
 
-* compilation __succeeds__
+* compilation succeeds
 * standard output is
 ```
 foobar
