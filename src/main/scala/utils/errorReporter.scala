@@ -23,6 +23,8 @@ object errorReporter {
     }.mkString
 
     def headlinesAndDescriptions(parseErrors: Seq[CompilationError]): Seq[(String, String)] = parseErrors.flatMap {
+      case e: IncompatibleTypes =>
+        ("Type error", s"Expected ${e.expectedType.getSimpleName} but got ${e.foundType.getSimpleName} in expression ${e.expression}") :: Nil
       case e: IdentifierAlreadyDeclared =>
         ("Syntax error", "Token is already declared") :: Nil
       case e: IdentifierNotDeclared =>
@@ -49,6 +51,7 @@ object errorReporter {
 
   def tokensAssociatedWithError(e: CompilationError): Seq[Token] =
     e match {
+      case e: IncompatibleTypes => tokens(e.expression)
       case e: IdentifierAlreadyDeclared =>
         e.conflictingToken :: Nil
       case e: IdentifierNotDeclared =>
@@ -68,5 +71,11 @@ object errorReporter {
         Nil
       case manyErrors: ManyErrors =>
         manyErrors.errors.flatMap(tokensAssociatedWithError)
+    }
+
+  def tokens(expression: Expression): Seq[Token] =
+    expression match {
+      case operand: OperandNode => operand.operandToken :: Nil
+      case operator: OperatorNode => tokens(operator.left) ++ Seq(operator.operatorToken) ++ tokens(operator.right)
     }
 }

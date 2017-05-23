@@ -49,7 +49,7 @@ object interpreter {
                                |""".stripMargin
 
   def main(args: Array[String]) = {
-    System.exit(interpret(duplicateDeclaration))
+    System.exit(interpret(typeAssignmentError))
   }
 
   def interpret(program: String): Int = {

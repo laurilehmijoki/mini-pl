@@ -5,14 +5,19 @@ import frontend.Token._
 case class VerifiedProgram(statements: Seq[StatementSequence])
 
 object SemanticAnalysis {
-  def verify(statements: Seq[StatementSequence]): Either[Seq[SemanticError], VerifiedProgram] =
+  def verify(statements: Seq[StatementSequence]): Either[Seq[CompilationError], VerifiedProgram] =
     statements.zipWithIndex.flatMap(Function.tupled { (statement, index) =>
       lazy val statementsBeforeThisStatement = statements.take(index)
       statement match {
         case print: Print =>
+          implicit val expectedReturnType: ExpectedReturnType = None
           resolveUndeclaredIdentifiers(print, statementsBeforeThisStatement) ++
           resolveExpressionErrors(print.expression, statementsBeforeThisStatement)
         case varDeclaration: VarDeclaration =>
+          implicit val expectedReturnType: ExpectedReturnType = Some(varDeclaration.typeKeyword match {
+            case _: StringTypeKeyword => classOf[StringToken]
+            case _: IntTypeKeyword => classOf[IntToken]
+          })
           statementsBeforeThisStatement.collect {
             case another: VarDeclaration if another.identifierToken.token == varDeclaration.identifierToken.token =>
               IdentifierAlreadyDeclared(varDeclaration.identifierToken, another)
@@ -36,26 +41,46 @@ object SemanticAnalysis {
         findIdentifiers(operator.left) ++ findIdentifiers(operator.right)
     }
 
-  def resolveExpressionErrors(expression: Expression, statementsBeforeThisStatement: Seq[StatementSequence]): Seq[InvalidExpression] =
-    expression match {
+  type TerminalType = Class[_ <: Terminal]
+  type ExpectedReturnType = Option[TerminalType]
+
+  def resolveExpressionErrors(expression: Expression, statementsBeforeThisStatement: Seq[StatementSequence])(implicit expectedResultType: ExpectedReturnType): Seq[CompilationError] = {
+    val errorOrTerminalType: Either[InvalidExpression, TerminalType] = expression match {
       case operand: OperandNode =>
-        Nil
+        findTerminalType(operand, statementsBeforeThisStatement)
+          .map(Right(_))
+          .getOrElse(Left(InvalidExpression(expression)))
       case operator: OperatorNode =>
         (operator.left, operator.right) match {
           case (leftExpression, rightExpression) =>
-            val leftTerminalType = findTerminalType(leftExpression, statementsBeforeThisStatement)
-            val rightTerminalType = findTerminalType(rightExpression, statementsBeforeThisStatement)
-            val expressionTypesMatch = for {
+            val leftTerminalType: Option[TerminalType] = findTerminalType(leftExpression, statementsBeforeThisStatement)
+            val rightTerminalType: Option[TerminalType] = findTerminalType(rightExpression, statementsBeforeThisStatement)
+            val sharedTerminalType: Option[TerminalType] = for {
               leftType <- leftTerminalType
               rightType <- rightTerminalType
-            } yield leftType == rightType
-            expressionTypesMatch.collect {
-              case false => InvalidExpression(expression) :: Nil
-            } getOrElse Nil
+              if leftType == rightType
+            } yield leftType
+
+            sharedTerminalType.map(Right(_)).getOrElse(Left(InvalidExpression(expression)))
         }
     }
 
-  def findTerminalType(expression: Expression, statementsBeforeThisStatement: Seq[StatementSequence]): Option[Class[ _ <: Terminal]] =
+    def resultTypeNotExpected(terminalType: TerminalType): Option[IncompatibleTypes] = for {
+      expectedTerminalType <- expectedResultType
+      error <-
+      if (terminalType == expectedTerminalType)
+        None
+      else
+        Some(IncompatibleTypes(expression, terminalType, expectedTerminalType))
+    } yield error
+
+    errorOrTerminalType.fold(
+      error => error :: Nil,
+      terminalType => resultTypeNotExpected(terminalType).map(_ :: Nil).getOrElse(Nil)
+    )
+  }
+
+  def findTerminalType(expression: Expression, statementsBeforeThisStatement: Seq[StatementSequence]): Option[TerminalType] =
     expression match {
       case operator: OperatorNode =>
         // TODO is it ok to let the left node determine the expected type?

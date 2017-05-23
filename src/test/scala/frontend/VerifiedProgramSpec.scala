@@ -26,6 +26,26 @@ class VerifiedProgramSpec extends Specification {
       {
         case Left(error +: Nil) => error.getClass must equalTo(classOf[IdentifierAlreadyDeclared])
       }: PartialFunction[VerificationResult, MatchResult[_]]
+    ),
+    (
+      """
+        |var z : string := 3;
+        |var foo : int := 1 + z;
+        |print foo;
+        |""".stripMargin,
+      {
+        case Left(error +: Nil) => error.getClass must equalTo(classOf[IncompatibleTypes])
+      }: PartialFunction[VerificationResult, MatchResult[_]]
+    ),
+    (
+      """
+        |var z : int := 3;
+        |var foo : string := 1 + z;
+        |print foo;
+        |""".stripMargin,
+      {
+        case Left(error +: Nil) => error.getClass must equalTo(classOf[IncompatibleTypes])
+      }: PartialFunction[VerificationResult, MatchResult[_]]
     )
   ) foreach Function.tupled { (program, x) =>
     s"verifier" should {
