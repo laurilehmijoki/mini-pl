@@ -55,10 +55,21 @@ object samplePrograms extends Specification {
       }: PartialFunction[VerificationResult, MatchResult[_]]
     ),
     (
-      "A correct program",
+      "A correct program with integer arithmetics",
       """
         |var z : int := 1 + 2 * 3 * 4;
         |var foo : int := 1 + z;
+        |print foo;
+        |""".stripMargin,
+      {
+        case Right(verifiedProgram) => verifiedProgram.statements must haveLength(3)
+      }: PartialFunction[VerificationResult, MatchResult[_]]
+    ),
+    (
+      "A correct program with string concatenation",
+      """
+        |var z : string := "foo";
+        |var foo : string := z + "bar";
         |print foo;
         |""".stripMargin,
       {
