@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 
-echo -n Generating readme...
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-sbt -batch --error "set showSuccess := false" "test:runMain docs.docGenerator" > README.md
+target=$DIR/README.md
+
+echo -n "Generating $target..."
+
+sbt -batch --error "set showSuccess := false" "test:runMain docs.docGenerator" > $target
 
 echo done
 
-echo Wrote the generated markdown into README.md
+echo Wrote the generated markdown into $target
 
