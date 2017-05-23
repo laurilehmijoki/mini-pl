@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+echo -n Generating readme...
+
+sbt -batch --error "set showSuccess := false" "test:runMain docs.docGenerator" > README.md
+
+echo done
+
+echo Wrote the generated markdown into README.md
+
