@@ -98,7 +98,7 @@ ${
                |* compilation ${"fails".error}
                |* error:
                |```
-               |${errorReporter.createErrorReport(program, error)}
+               |${errorReporter.createErrorReport(program, error).headlines.mkString("\n")}
                |```""".stripMargin,
           Function.tupled((symbolTable: SymbolTable, stdOut: String) =>
             s"""

@@ -59,7 +59,8 @@ object interpreter {
     val verifiedProgram = frontendHelper.verify(program)
     val exitStatus = verifiedProgram.right.map(program => astUtils.build(program.statements)) match {
       case Left(err: Seq[CompilationError]) =>
-        println(errorReporter.createErrorReport(program, err))
+        val errorReport = errorReporter.createErrorReport(program, err)
+        println(s"${errorReport.headlines.mkString("\n")}\n${errorReport.highlightedSourceCode}")
         1
       case Right(ast) =>
         visit(ast, systemOut)

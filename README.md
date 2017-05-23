@@ -48,12 +48,6 @@ baz
 * error:
 ```
 Syntax error: Cannot find parser for tokens List(IdentifierToken(baz))
-
-var z : int := 3;
-var foo : int := 1 + "";
-print foo;
-baz
-
 ```
 
 ### A program with duplicate var declarations
@@ -68,10 +62,6 @@ var foo : int := 3;
 * error:
 ```
 Syntax error: Token is already declared
-
-var foo : int := 2;
-var foo : int := 3;
-
 ```
 
 ### A program where the user assigns an integer into string
@@ -88,11 +78,6 @@ print foo;
 ```
 Type error: Expected StringToken but got IntToken in expression OperandNode(IntToken(3))
 Invalid expression: OperatorNode(Plus(+),OperandNode(IntToken(1)),OperandNode(IdentifierToken(z)))
-
-var z : string := 3;
-var foo : int := 1 + z;
-print foo;
-
 ```
 
 ### A program where the user assigns the value of the integer identifier to a string identifier
@@ -108,11 +93,6 @@ print foo;
 * error:
 ```
 Type error: Expected StringToken but got IntToken in expression OperandNode(IdentifierToken(z))
-
-var z : int := 3;
-var foo : string := z;
-print foo;
-
 ```
 
 ### A correct program with integer arithmetics

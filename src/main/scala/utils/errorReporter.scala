@@ -5,7 +5,12 @@ import utils.extensions.FormattedString
 
 object errorReporter {
 
-  def createErrorReport(program: String, errors: Seq[CompilationError])(implicit formattingContext: FormattingContext): String = {
+  case class ErrorReport(
+                        headlines: Seq[String],
+                        highlightedSourceCode: String
+                        )
+
+  def createErrorReport(program: String, errors: Seq[CompilationError])(implicit formattingContext: FormattingContext): ErrorReport = {
     lazy val indexesToHighlight: Set[Int] = errors.flatMap {
       tokensAssociatedWithError
     }.flatMap { token =>
@@ -44,9 +49,9 @@ object errorReporter {
 
     val headlines = headlinesAndDescriptions(errors).map(Function.tupled { (title, message) =>
       s"${title.highlighted}: $message"
-    }).mkString("\n")
-    
-    s"$headlines\n$highlightedSourceCode"
+    })
+
+    ErrorReport(headlines, highlightedSourceCode)
   }
 
   def tokensAssociatedWithError(e: CompilationError): Seq[Token] =
