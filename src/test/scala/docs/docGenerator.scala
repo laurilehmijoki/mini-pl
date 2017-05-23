@@ -48,6 +48,12 @@ Source: https://www.cs.helsinki.fi/u/vihavain/k16/Compilers/project/miniplsyntax
 
 $programsToMarkdown
 
+## Development
+
+* Install sbt (a Scala build tool): http://www.scala-sbt.org/download.html
+* Re-generate `README.md` before every git commit:
+  * `ln -s ../../generate_readme .git/hooks/pre-commit`
+
 ## Author
 
 Lauri Lehmijoki
