@@ -66,7 +66,7 @@ object StatementSequence {
             case Right(statementSequence) => Right(statementSequence)
           }
         }
-        .getOrElse(Left(SyntaxError(tokensInStatement, s"Cannot find parser for the statement $tokensInStatement")))
+        .getOrElse(Left(ParserNotFound(tokensInStatement)))
 
       statement
     }

@@ -27,6 +27,8 @@ object errorReporter {
         ("Syntax error", "Token is already declared") :: Nil
       case e: IdentifierNotDeclared =>
         ("Syntax error", s"""Identifier "${e.identifierToken.token}" is not declared""") :: Nil
+      case e: ParserNotFound =>
+        ("Syntax error", s"Cannot find parser for tokens ${e.tokens}") :: Nil
       case e: SyntaxError =>
         ("Syntax error", e.message) :: Nil
       case manyErrors: ManyErrors => headlinesAndDescriptions(manyErrors.errors)
@@ -51,6 +53,8 @@ object errorReporter {
         e.conflictingToken :: Nil
       case e: IdentifierNotDeclared =>
         e.identifierToken :: Nil
+      case e: ParserNotFound =>
+        e.tokens
       case syntaxError: SyntaxError =>
         syntaxError.tokens
       case e: InvalidExpression =>

@@ -49,22 +49,11 @@ object interpreter {
                                |""".stripMargin
 
   def main(args: Array[String]) = {
-    System.exit(interpret(stringConcatenation))
+    System.exit(interpret(duplicateDeclaration))
   }
 
   def interpret(program: String): Int = {
-    val tokens = Token.tokenize(program)
-
-    val parseResult = StatementSequence.parse(tokens).foldLeft(Right(Nil): Either[Seq[ParseError], Seq[StatementSequence]]) {
-      (memo, item) => item match {
-        case Left(errors) =>
-          val previousErrors = memo.left.getOrElse(Nil)
-          Left(previousErrors :+ errors)
-        case Right(statementSequences) =>
-          memo.right.map { _ :+ statementSequences}
-      }
-    }
-    val verifiedProgram = parseResult.right.flatMap(SemanticAnalysis.verify)
+    val verifiedProgram = frontendHelper.verify(program)
     val exitStatus = verifiedProgram.right.map(program => astUtils.build(program.statements)) match {
       case Left(err: Seq[CompilationError]) =>
         println(errorReporter.createErrorReport(program, err))
