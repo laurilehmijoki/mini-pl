@@ -99,8 +99,7 @@ ${
                |* error:
                |```
                |${errorReporter.createErrorReport(program, error)}
-               |```
-          """.stripMargin,
+               |```""".stripMargin,
           Function.tupled((symbolTable: SymbolTable, stdOut: String) =>
             s"""
                |* compilation ${"succeeds".highlighted}

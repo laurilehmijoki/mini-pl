@@ -55,7 +55,6 @@ print foo;
 baz
 
 ```
-          
 
 ### A program with duplicate var declarations
 
@@ -74,7 +73,6 @@ var foo : int := 2;
 var foo : int := 3;
 
 ```
-          
 
 ### A program where the user assigns an integer into string
 
@@ -96,7 +94,6 @@ var foo : int := 1 + z;
 print foo;
 
 ```
-          
 
 ### A program where the user assigns the value of the integer identifier to a string identifier
 
@@ -117,7 +114,6 @@ var foo : string := z;
 print foo;
 
 ```
-          
 
 ### A correct program with integer arithmetics
 
