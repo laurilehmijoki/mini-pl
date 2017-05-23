@@ -15,7 +15,7 @@ object SemanticAnalysis {
         case varDeclaration: VarDeclaration =>
           statementsBeforeThisStatement.collect {
             case another: VarDeclaration if another.identifierToken.token == varDeclaration.identifierToken.token =>
-              TokenAlreadyDeclared(varDeclaration.identifierToken, another)
+              IdentifierAlreadyDeclared(varDeclaration.identifierToken, another)
           } ++
             resolveExpressionErrors(varDeclaration.expression, statementsBeforeThisStatement) ++
             resolveUndeclaredIdentifiers(varDeclaration, statementsBeforeThisStatement)

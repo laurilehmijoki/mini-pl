@@ -23,7 +23,7 @@ object errorReporter {
     }.mkString
 
     def headlinesAndDescriptions(parseErrors: Seq[CompilationError]): Seq[(String, String)] = parseErrors.flatMap {
-      case e: TokenAlreadyDeclared =>
+      case e: IdentifierAlreadyDeclared =>
         ("Syntax error", "Token is already declared") :: Nil
       case e: IdentifierNotDeclared =>
         ("Syntax error", s"""Identifier "${e.identifierToken.token}" is not declared""") :: Nil
@@ -49,7 +49,7 @@ object errorReporter {
 
   def tokensAssociatedWithError(e: CompilationError): Seq[Token] =
     e match {
-      case e: TokenAlreadyDeclared =>
+      case e: IdentifierAlreadyDeclared =>
         e.conflictingToken :: Nil
       case e: IdentifierNotDeclared =>
         e.identifierToken :: Nil

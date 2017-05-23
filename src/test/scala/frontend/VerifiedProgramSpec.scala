@@ -17,6 +17,15 @@ class VerifiedProgramSpec extends Specification {
       {
         case Left(error +: Nil) => error.getClass must equalTo(classOf[ParserNotFound])
       }: PartialFunction[VerificationResult, MatchResult[_]]
+    ),
+    (
+      """
+        |var foo : int := 2;
+        |var foo : int := 3;
+        |""".stripMargin,
+      {
+        case Left(error +: Nil) => error.getClass must equalTo(classOf[IdentifierAlreadyDeclared])
+      }: PartialFunction[VerificationResult, MatchResult[_]]
     )
   ) foreach Function.tupled { (program, x) =>
     s"verifier" should {
