@@ -5,10 +5,10 @@ import samples.samplePrograms
 
 class VerifiedProgramSpec extends Specification {
 
-  samplePrograms.programs foreach Function.tupled { (program, verifier) =>
+  samplePrograms.programs foreach Function.tupled { (programDescription, sourceCode, verifier) =>
     s"verifier" should {
-      s"correctly verify $program" in {
-        frontendHelper.verify(program) should beLike(verifier)
+      s"correctly verify $sourceCode in ${programDescription.toLowerCase()}" in {
+        frontendHelper.verify(sourceCode) should beLike(verifier)
       }
     }
   }
