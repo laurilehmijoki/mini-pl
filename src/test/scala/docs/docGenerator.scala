@@ -75,8 +75,8 @@ MIT
 
   def programsToMarkdown = {
     implicit val formattingContext: FormattingContext = Markdown
-    samples.samplePrograms.programs.map(Function.tupled({ (description, program, _) =>
-      val failureReportOrSymbolTableAndStdout: Either[Seq[CompilationError], (SymbolTable, String)] = frontendHelper.verify(program)
+    samples.samplePrograms.programs.map { sampleProgram =>
+      val failureReportOrSymbolTableAndStdout: Either[Seq[CompilationError], (SymbolTable, String)] = frontendHelper.verify(sampleProgram.sourceCode)
         .right
         .map { verifiedProgram =>
           val baos = new ByteArrayOutputStream()
@@ -85,10 +85,10 @@ MIT
         }
 
       s"""
-### $description
+### ${sampleProgram.description}
 
 ```
-${program.trim()}
+${sampleProgram.sourceCode.trim()}
 ```
 
 ${
@@ -98,7 +98,7 @@ ${
                |* compilation ${"fails".error}
                |* error:
                |```
-               |${errorReporter.createErrorReport(program, error).headlines.mkString("\n")}
+               |${errorReporter.createErrorReport(sampleProgram.sourceCode, error).headlines.mkString("\n")}
                |```""".stripMargin,
           Function.tupled((symbolTable: SymbolTable, stdOut: String) =>
             s"""
@@ -127,6 +127,6 @@ ${
           ))
       }
 """
-    })).mkString
+    }.mkString
   }
 }
