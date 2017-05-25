@@ -135,8 +135,7 @@ print foo;
 * compilation succeeds
 * standard output is
 ```
-26
-```
+26```
 * interpretation results in the following symbol table
   * `z` -> `25`
   * `foo` -> `26`
@@ -153,8 +152,7 @@ print foo;
 * compilation succeeds
 * standard output is
 ```
-foobar
-```
+foobar```
 * interpretation results in the following symbol table
   * `z` -> `foo`
   * `foo` -> `foobar`

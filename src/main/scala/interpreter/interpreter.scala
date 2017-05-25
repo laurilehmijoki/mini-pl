@@ -31,14 +31,14 @@ object interpreter {
     visit(ast, systemOut)
   }
 
-  type SymbolTable = Map[IdentifierToken, SymbolValue]
+  type SymbolTable = Map[String, SymbolValue]
 
   def visit(ast: Ast, systemOut: PrintStream, symbols: SymbolTable = Map()): SymbolTable =
     ast match {
       case EmptyNode => symbols
       case ast: AstNode =>
         def updateSymbol(identifierToken: IdentifierToken, expression: Expression) =
-          symbols + (identifierToken -> evaluate(expression, symbols))
+          symbols + (identifierToken.token -> evaluate(expression, symbols))
         val symbolsAfterStatement = ast.statement match {
           case v: VarDeclaration =>
             updateSymbol(v.identifierToken, v.expression)
@@ -47,8 +47,8 @@ object interpreter {
           case p: Print =>
             val symbolValue = evaluate(p.expression, symbols)
             symbolValue match {
-              case i: IntegerValue => systemOut.println(i.value)
-              case s: StringValue => systemOut.println(s.value)
+              case i: IntegerValue => systemOut.print(i.value)
+              case s: StringValue => systemOut.print(s.value)
             }
             symbols
         }
@@ -65,7 +65,7 @@ object interpreter {
           case intToken: IntToken => IntegerValue(intToken.intValue)
           case stringToken: StringToken => StringValue(stringToken.containedString)
           case identifier: IdentifierToken =>
-            symbols.getOrElse(identifier, throw new RuntimeException(s"Cannot find symbol $identifier"))
+            symbols.getOrElse(identifier.token, throw new RuntimeException(s"Cannot find symbol $identifier"))
         }
       case operatorNode: OperatorNode =>
         (evaluate(operatorNode.left, symbols), evaluate(operatorNode.right, symbols)) match {

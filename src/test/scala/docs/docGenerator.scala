@@ -114,7 +114,7 @@ ${
                   case stringValue: StringValue => stringValue.value.toString
                 }
                 val entryAsMarkdown =
-                  s"  * `${symbolTableEntry._1.token}` -> `$symbolValue`"
+                  s"  * `${symbolTableEntry._1}` -> `$symbolValue`"
                 markdown match {
                   case None =>
                     Some(entryAsMarkdown)
