@@ -80,9 +80,13 @@ object interpreter {
     ast match {
       case EmptyNode => symbols
       case ast: AstNode =>
+        def updateSymbol(identifierToken: IdentifierToken, expression: Expression) =
+          symbols + (identifierToken -> evaluate(expression, symbols))
         val symbolsAfterStatement = ast.statement match {
           case v: VarDeclaration =>
-            symbols + (v.identifierToken -> evaluate(v.expression, symbols))
+            updateSymbol(v.identifierToken, v.expression)
+          case v: VarAssignment =>
+            updateSymbol(v.identifierToken, v.expression)
           case p: Print =>
             val symbolValue = evaluate(p.expression, symbols)
             symbolValue match {

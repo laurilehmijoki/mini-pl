@@ -1,6 +1,6 @@
 package samples
 
-import frontend.{IdentifierAlreadyDeclared, IncompatibleTypes, InvalidExpression, ParserNotFound}
+import frontend._
 import frontend.frontendHelper.VerificationResult
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Specification
@@ -28,6 +28,25 @@ object samplePrograms extends Specification {
         |""".stripMargin,
       {
         case Left(error +: Nil) => error.getClass must equalTo(classOf[IdentifierAlreadyDeclared])
+      }: PartialFunction[VerificationResult, MatchResult[_]]
+    ),
+    (
+      "A program with var reassignment",
+      """
+        |var foo : int := 2;
+        |foo := 3;
+        |""".stripMargin,
+      {
+        case Right(verifiedProgram) => verifiedProgram.statements must haveLength(2)
+      }: PartialFunction[VerificationResult, MatchResult[_]]
+    ),
+    (
+      "A program with illegal var reassignment",
+      """
+        |foo := 3;
+        |""".stripMargin,
+      {
+        case Left(error +: Nil) => error.getClass must equalTo(classOf[IdentifierNotDeclared])
       }: PartialFunction[VerificationResult, MatchResult[_]]
     ),
     (

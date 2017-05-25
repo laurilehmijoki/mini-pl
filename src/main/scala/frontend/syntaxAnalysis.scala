@@ -1,6 +1,6 @@
 package frontend
 
-import frontend.StatementSequence.StatementParseResultOption
+import frontend.StatementSequence.{StatementParseResultOption, errorOrExpression}
 import frontend.Token._
 
 sealed trait Program
@@ -15,7 +15,6 @@ sealed trait Program
            |   "assert" "(" <expr> ")"
  */
 sealed trait StatementSequence extends Program
-
 
 object StatementSequence {
   type ParseResult = Either[ParseError, StatementSequence]
@@ -43,6 +42,7 @@ object StatementSequence {
 
     val parsers =
       { VarDeclaration.parse(_) } ::
+      { VarAssignment.parse(_) } ::
       { Print.parse(_) } ::
         Nil
 
@@ -55,6 +55,23 @@ object StatementSequence {
       } getOrElse Left(ParserNotFound(tokensInStatement))
     }
   }
+
+  def errorOrExpression(tokens: Seq[Token]): Either[ParseError, Expression] = for {
+    expressionTokens <- expr.expressionTokens(tokens)
+    astRoot <- expr.toExpression(expr.toPostfix(expressionTokens))
+  } yield astRoot
+}
+// <var_ident> ":=" <expr>
+case class VarAssignment(identifierToken: IdentifierToken, expression: Expression) extends StatementSequence
+
+object VarAssignment {
+  def parse(tokens: Seq[Token]): StatementParseResultOption =
+    tokens match {
+      case (identifierToken: IdentifierToken) +: (_: AssignmentToken) +: third :+ (_: StatementTerminator) =>
+        Some(errorOrExpression(third).map(expression => VarAssignment(identifierToken, expression)))
+      case _ =>
+        None
+    }
 }
 
 // "print" <expr>
@@ -64,11 +81,7 @@ object Print {
   def parse(tokens: Seq[Token]): StatementParseResultOption =
     tokens match {
       case (_: PrintKeyword) +: second :+ (_: StatementTerminator) =>
-        val errOrPrintStatement = for {
-          expressionTokens <- expr expressionTokens second
-          astRoot <- expr.toExpression(expr.toPostfix(expressionTokens))
-        } yield Print(astRoot)
-        Some(errOrPrintStatement)
+        Some(errorOrExpression(second).map(Print(_)))
       case _ =>
         None
     }
@@ -99,12 +112,7 @@ object VarDeclaration {
           case wrongToken => Left(SyntaxError(tokens, s"$wrongToken is not the expected $AssignmentToken"))
         }
 
-        val expressionOrError: Either[ParseError, Expression] = for {
-          expressionTokens <- expr.expressionTokens(tail)
-          astRoot <- expr.toExpression(expr.toPostfix(expressionTokens))
-        } yield astRoot
-
-        val errorOrVarStatement = identifierOrError :: typePrefixOrError :: typeOrError :: assignmentOrError :: expressionOrError :: Nil match {
+        val errorOrVarStatement = identifierOrError :: typePrefixOrError :: typeOrError :: assignmentOrError :: errorOrExpression(tail) :: Nil match {
           case Right(identifier: IdentifierToken) +: Right(_) +: Right(typeVal: TypeKeyword) +: Right(_) +: Right(expression: Expression) +: _ =>
             Right(VarDeclaration(identifier, typeVal, expression))
           case xs =>

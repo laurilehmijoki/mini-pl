@@ -64,6 +64,34 @@ var foo : int := 3;
 Syntax error: Token is already declared
 ```
 
+### A program with var reassignment
+
+```
+var foo : int := 2;
+foo := 3;
+```
+
+
+* compilation succeeds
+* standard output is
+```
+```
+* interpretation results in the following symbol table
+  * `foo` -> `3`
+
+### A program with illegal var reassignment
+
+```
+foo := 3;
+```
+
+
+* compilation fails
+* error:
+```
+Syntax error: Identifier "foo" is not declared
+```
+
 ### A program where the user assigns an integer into string
 
 ```

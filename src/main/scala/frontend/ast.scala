@@ -10,6 +10,7 @@ object astUtils {
     def toNode(statement: StatementSequence): AstNode =
       statement match {
         case v: VarDeclaration => AstNode(v, children = Nil)
+        case v: VarAssignment=> AstNode(v, children = Nil)
         case p: Print => AstNode(p, children = Nil)
       }
     statements match {

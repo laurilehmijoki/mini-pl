@@ -13,6 +13,10 @@ object SemanticAnalysis {
           implicit val expectedReturnType: ExpectedReturnType = None
           resolveUndeclaredIdentifiers(print, statementsBeforeThisStatement) ++
           resolveExpressionErrors(print.expression, statementsBeforeThisStatement)
+        case varAssignment: VarAssignment =>
+          implicit val expectedReturnType: ExpectedReturnType = None // TODO repetition here, can we remove it?
+          resolveUndeclaredIdentifiers(varAssignment, statementsBeforeThisStatement) ++
+            resolveExpressionErrors(varAssignment.expression, statementsBeforeThisStatement)
         case varDeclaration: VarDeclaration =>
           implicit val expectedReturnType: ExpectedReturnType = Some(varDeclaration.typeKeyword match {
             case _: StringTypeKeyword => classOf[StringToken]
@@ -101,25 +105,26 @@ object SemanticAnalysis {
                     }
                   else
                     Nil
-                case _: Print =>
+                case _: Print | _: VarAssignment =>
                   Nil
               }
               .headOption
         }
     }
 
-  def findIdentifiers(statementSequence: StatementSequence): Seq[IdentifierToken] =
+  def referencedIdentifiers(statementSequence: StatementSequence): Seq[IdentifierToken] =
     statementSequence match {
       case print: Print => findIdentifiers(print.expression)
+      case varAssignment: VarAssignment => varAssignment.identifierToken +: findIdentifiers(varAssignment.expression)
       case varDeclaration: VarDeclaration => findIdentifiers(varDeclaration.expression)
     }
 
   private def resolveUndeclaredIdentifiers(statementSequence: StatementSequence, statementsBeforeThisStatement: Seq[StatementSequence]) = {
-    lazy val referencedIdentifiersInThisStatement = findIdentifiers(statementSequence).toSet
+    val referencedIdentifiersInThisStatement = referencedIdentifiers(statementSequence).toSet
     referencedIdentifiersInThisStatement.flatMap { identifier =>
       val identifierIsDeclared = statementsBeforeThisStatement.exists {
         case varDeclaration: VarDeclaration => referencedIdentifiersInThisStatement.contains(varDeclaration.identifierToken)
-        case Print(_) => false
+        case Print(_) | VarAssignment(_, _) => false
       }
       if (identifierIsDeclared)
         Nil
