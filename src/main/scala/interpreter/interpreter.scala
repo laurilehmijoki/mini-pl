@@ -47,8 +47,8 @@ object interpreter {
           case p: Print =>
             val symbolValue = evaluate(p.expression, symbols)
             symbolValue match {
-              case i: IntegerValue => systemOut.print(i.value)
-              case s: StringValue => systemOut.print(s.value)
+              case i: IntegerValue => systemOut.println(i.value)
+              case s: StringValue => systemOut.println(s.value)
             }
             symbols
         }

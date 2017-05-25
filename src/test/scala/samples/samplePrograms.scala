@@ -110,7 +110,7 @@ object samplePrograms extends Specification {
           "z" -> IntegerValue(1 + 2 * 3 * 4),
           "foo" -> IntegerValue(1 + 1 + 2 * 3 * 4)
         ),
-        stdout = Some(s"${1 + 1 + 2 * 3 * 4}")
+        stdout = Some(s"${1 + 1 + 2 * 3 * 4}\n")
       ))
     ),
     SampleProgram(
@@ -128,7 +128,7 @@ object samplePrograms extends Specification {
           "z" -> StringValue("foo"),
           "foo" -> StringValue("foobar")
         ),
-        stdout = Some("foobar")
+        stdout = Some("foobar\n")
       ))
     )
   )
