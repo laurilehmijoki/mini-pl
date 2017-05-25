@@ -26,7 +26,7 @@ object SemanticAnalysis {
             case another: VarDeclaration if another.identifierToken.token == varDeclaration.identifierToken.token =>
               IdentifierAlreadyDeclared(varDeclaration.identifierToken, another)
           } ++
-            resolveExpressionErrors(varDeclaration.expression, statementsBeforeThisStatement) ++
+            varDeclaration.expression.map(expression => resolveExpressionErrors(expression, statementsBeforeThisStatement)).getOrElse(Nil) ++
             resolveUndeclaredIdentifiers(varDeclaration, statementsBeforeThisStatement)
       }
     }) match {
@@ -116,7 +116,7 @@ object SemanticAnalysis {
     statementSequence match {
       case print: Print => findIdentifiers(print.expression)
       case varAssignment: VarAssignment => varAssignment.identifierToken +: findIdentifiers(varAssignment.expression)
-      case varDeclaration: VarDeclaration => findIdentifiers(varDeclaration.expression)
+      case varDeclaration: VarDeclaration => varDeclaration.expression.map(findIdentifiers).getOrElse(Nil)
     }
 
   private def resolveUndeclaredIdentifiers(statementSequence: StatementSequence, statementsBeforeThisStatement: Seq[StatementSequence]) = {

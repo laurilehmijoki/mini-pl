@@ -95,6 +95,25 @@ foo := 3;
 Syntax error: Identifier "foo" is not declared
 ```
 
+### A program with var default value
+
+```
+var intIdentifier : int;
+var stringIdentifier : string;
+```
+
+
+* compilation succeeds
+* standard output is
+
+```
+
+```
+
+* interpretation results in the following symbol table
+  * `intIdentifier` -> `0`
+  * `stringIdentifier` -> ``
+
 ### A program where the user assigns an integer into string
 
 ```

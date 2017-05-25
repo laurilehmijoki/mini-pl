@@ -37,13 +37,19 @@ object interpreter {
     ast match {
       case EmptyNode => symbols
       case ast: AstNode =>
-        def updateSymbol(identifierToken: IdentifierToken, expression: Expression) =
-          symbols + (identifierToken.token -> evaluate(expression, symbols))
+        def updateSymbol(identifierToken: IdentifierToken, symbolValue: SymbolValue): SymbolTable =
+          symbols + (identifierToken.token -> symbolValue)
+        def updateWithExpression(identifierToken: IdentifierToken, expression: Expression): SymbolTable =
+          updateSymbol(identifierToken, evaluate(expression, symbols))
+        
         val symbolsAfterStatement = ast.statement match {
           case v: VarDeclaration =>
-            updateSymbol(v.identifierToken, v.expression)
+            val symbolValue = v.expression
+              .map(expr => evaluate(expr, symbols))
+              .getOrElse(defaultValue(v.typeKeyword))
+            updateSymbol(v.identifierToken, symbolValue)
           case v: VarAssignment =>
-            updateSymbol(v.identifierToken, v.expression)
+            updateWithExpression(v.identifierToken, v.expression)
           case p: Print =>
             val symbolValue = evaluate(p.expression, symbols)
             symbolValue match {
@@ -87,6 +93,11 @@ object interpreter {
           case _ =>
             throw new RuntimeException(s"Cannot apply $operatorNode on (${operatorNode.left}, ${operatorNode.right})")
         }
+    }
 
+  def defaultValue(typeKeyword: TypeKeyword): SymbolValue =
+    typeKeyword match {
+      case _: StringTypeKeyword => StringValue("")
+      case _: IntTypeKeyword => IntegerValue(0)
     }
 }

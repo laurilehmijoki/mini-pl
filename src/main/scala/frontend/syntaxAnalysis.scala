@@ -88,33 +88,30 @@ object Print {
 }
 
 // "var" <var_ident> ":" <type> [ ":=" <expr> ]
-case class VarDeclaration(identifierToken: IdentifierToken, typeKeyword: TypeKeyword, expression: Expression) extends StatementSequence
+case class VarDeclaration(identifierToken: IdentifierToken, typeKeyword: TypeKeyword, expression: Option[Expression]) extends StatementSequence
 
 object VarDeclaration {
   def parse(tokens: Seq[Token]): StatementParseResultOption =
     tokens match {
-      case (_: VarKeyword) +: second +: third +: fourth +: fifth +: tail :+ (_: StatementTerminator) =>
-        val identifierOrError: Either[ParseError, IdentifierToken] = second match {
-          case ident: IdentifierToken => Right(ident)
-          case wrongToken => Left(SyntaxError(tokens, s"Unexpected identifier $wrongToken, expected an identifier"))
+      case (_: VarKeyword) +: second +: third +: fourth +: ((_: StatementTerminator) :: Nil) => // // "var" <var_ident> ":" <type>
+        val errorOrVarStatement = identifierOrError(second, tokens) :: typePrefixOrError(third, tokens) :: typeOrError(fourth,tokens) :: Nil match {
+          case Right(identifier: IdentifierToken) +: Right(_) +: Right(typeVal: TypeKeyword) +: Nil =>
+            Right(VarDeclaration(identifier, typeVal, None))
+          case xs =>
+            Left(ManyErrors(xs.collect {
+              case Left(parseError) => parseError
+            }))
         }
-        val typePrefixOrError: Either[ParseError, Unit] = third match {
-          case TypePrefixToken(_) => Right(Unit)
-          case wrongToken => Left(SyntaxError(tokens, s"Unexpected type prefix $wrongToken, expected $TypePrefixToken"))
-        }
-        val typeOrError: Either[ParseError, TypeKeyword] = fourth match {
-          case typeKeyword: TypeKeyword => Right(typeKeyword)
-          case wrongToken => Left(SyntaxError(tokens, s"Unexpected type keyword $wrongToken"))
-        }
-
+        Some(errorOrVarStatement)
+      case (_: VarKeyword) +: second +: third +: fourth +: fifth +: tail :+ (_: StatementTerminator) => // "var" <var_ident> ":" <type> ":=" <expr>
         val assignmentOrError: Either[ParseError, Token] = fifth match {
           case assignment: AssignmentToken => Right(assignment)
           case wrongToken => Left(SyntaxError(tokens, s"$wrongToken is not the expected $AssignmentToken"))
         }
 
-        val errorOrVarStatement = identifierOrError :: typePrefixOrError :: typeOrError :: assignmentOrError :: errorOrExpression(tail) :: Nil match {
+        val errorOrVarStatement = identifierOrError(second, tokens) :: typePrefixOrError(third, tokens) :: typeOrError(fourth,tokens) :: assignmentOrError :: errorOrExpression(tail) :: Nil match {
           case Right(identifier: IdentifierToken) +: Right(_) +: Right(typeVal: TypeKeyword) +: Right(_) +: Right(expression: Expression) +: _ =>
-            Right(VarDeclaration(identifier, typeVal, expression))
+            Right(VarDeclaration(identifier, typeVal, Some(expression)))
           case xs =>
             Left(ManyErrors(xs.collect {
               case Left(parseError) => parseError
@@ -124,4 +121,19 @@ object VarDeclaration {
       case _ =>
         None
     }
+
+  def identifierOrError(token: Token, tokens: Seq[Token]): Either[ParseError, IdentifierToken] = token match {
+    case ident: IdentifierToken => Right(ident)
+    case wrongToken => Left(SyntaxError(tokens, s"Unexpected identifier $wrongToken, expected an identifier"))
+  }
+
+  def typePrefixOrError(token: Token, tokens: Seq[Token]): Either[ParseError, Unit] = token match {
+    case TypePrefixToken(_) => Right(Unit)
+    case wrongToken => Left(SyntaxError(tokens, s"Unexpected type prefix $wrongToken, expected $TypePrefixToken"))
+  }
+
+  def typeOrError(token: Token, tokens: Seq[Token]): Either[ParseError, TypeKeyword] = token match {
+    case typeKeyword: TypeKeyword => Right(typeKeyword)
+    case wrongToken => Left(SyntaxError(tokens, s"Unexpected type keyword $wrongToken"))
+  }
 }

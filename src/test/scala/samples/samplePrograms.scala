@@ -70,6 +70,23 @@ object samplePrograms extends Specification {
       interpretationResult = None
     ),
     SampleProgram(
+      "A program with var default value",
+      """
+        |var intIdentifier : int;
+        |var stringIdentifier : string;
+        |""".stripMargin,
+      {
+        case Right(verifiedProgram) => verifiedProgram.statements must haveLength(2)
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = Some(InterpretationResult(
+        Map(
+          "intIdentifier" -> IntegerValue(0),
+          "stringIdentifier" -> StringValue("")
+        ),
+        stdout = None
+      ))
+    ),
+    SampleProgram(
       "A program where the user assigns an integer into string",
       """
         |var z : string := 3;
