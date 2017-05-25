@@ -67,7 +67,7 @@ case class VarAssignment(identifierToken: IdentifierToken, expression: Expressio
 object VarAssignment {
   def parse(tokens: Seq[Token]): StatementParseResultOption =
     tokens match {
-      case (identifierToken: IdentifierToken) +: (_: AssignmentToken) +: third :+ (_: StatementTerminator) =>
+      case (identifierToken: IdentifierToken) +: (_: AssignmentToken) +: third :+ (_: SemicolonToken) =>
         Some(errorOrExpression(third).map(expression => VarAssignment(identifierToken, expression)))
       case _ =>
         None
@@ -80,7 +80,7 @@ case class Print(expression: Expression) extends StatementSequence
 object Print {
   def parse(tokens: Seq[Token]): StatementParseResultOption =
     tokens match {
-      case (_: PrintKeyword) +: second :+ (_: StatementTerminator) =>
+      case (_: PrintKeyword) +: second :+ (_: SemicolonToken) =>
         Some(errorOrExpression(second).map(Print(_)))
       case _ =>
         None
@@ -93,7 +93,7 @@ case class VarDeclaration(identifierToken: IdentifierToken, typeKeyword: TypeKey
 object VarDeclaration {
   def parse(tokens: Seq[Token]): StatementParseResultOption =
     tokens match {
-      case (_: VarKeyword) +: second +: third +: fourth +: ((_: StatementTerminator) :: Nil) => // // "var" <var_ident> ":" <type>
+      case (_: VarKeyword) +: second +: third +: fourth +: ((_: SemicolonToken) :: Nil) => // // "var" <var_ident> ":" <type>
         val errorOrVarStatement = identifierOrError(second, tokens) :: typePrefixOrError(third, tokens) :: typeOrError(fourth,tokens) :: Nil match {
           case Right(identifier: IdentifierToken) +: Right(_) +: Right(typeVal: TypeKeyword) +: Nil =>
             Right(VarDeclaration(identifier, typeVal, None))
@@ -103,7 +103,7 @@ object VarDeclaration {
             }))
         }
         Some(errorOrVarStatement)
-      case (_: VarKeyword) +: second +: third +: fourth +: fifth +: tail :+ (_: StatementTerminator) => // "var" <var_ident> ":" <type> ":=" <expr>
+      case (_: VarKeyword) +: second +: third +: fourth +: fifth +: tail :+ (_: SemicolonToken) => // "var" <var_ident> ":" <type> ":=" <expr>
         val assignmentOrError: Either[ParseError, Token] = fifth match {
           case assignment: AssignmentToken => Right(assignment)
           case wrongToken => Left(SyntaxError(tokens, s"$wrongToken is not the expected $AssignmentToken"))
