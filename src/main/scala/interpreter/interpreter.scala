@@ -11,49 +11,6 @@ case class IntegerValue(value: Int) extends SymbolValue
 case class StringValue(value: String) extends SymbolValue
 
 object interpreter {
-  val programWithTwoErrors = """
-                  |var z : int := 3;
-                  |var foo : int := 1 + "";
-                  |print foo;
-                  |baz
-                  |""".stripMargin
-
-  val typeAssignmentError = """
-                               |var z : string := 3;
-                               |var foo : int := 1 + z;
-                               |print foo;
-                               |""".stripMargin
-
-  val stringAndIntEvaluation = """
-                              |var foo : int := 1 + "test";
-                              |print foo;
-                              |""".stripMargin
-
-  val program = """
-                               |var z : int := 3;
-                               |var foo : int := 1 + z;
-                               |print foo;
-                               |""".stripMargin
-
-  val printUndeclaredIdentifier = """
-                  |var foo : int := 1 + z;
-                  |print z;
-                  |""".stripMargin
-
-  val duplicateDeclaration = """
-                                    |var foo : int := 2;
-                                    |var foo : int := 3;
-                                    |""".stripMargin
-
-  val stringConcatenation = """
-                               |var foo : string := "a" + "b";
-                               |print foo;
-                               |""".stripMargin
-
-  def main(args: Array[String]) = {
-    implicit val formattingContext: FormattingContext = BashShell
-    System.exit(interpret(typeAssignmentError, System.out))
-  }
 
   def interpret(program: String, systemOut: PrintStream)(implicit formattingContext: FormattingContext): Int = {
     val verifiedProgram = frontendHelper.verify(program)
