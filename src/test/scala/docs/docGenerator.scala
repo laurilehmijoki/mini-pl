@@ -54,6 +54,8 @@ $programsToMarkdown
 
 ### Tests
 
+[![Build Status](https://travis-ci.org/laurilehmijoki/mini-pl.svg?branch=master)](https://travis-ci.org/laurilehmijoki/mini-pl)
+
 ```
 sbt test
 ```
