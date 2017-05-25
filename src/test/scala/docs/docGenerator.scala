@@ -104,8 +104,11 @@ ${
             s"""
                |* compilation ${"succeeds".highlighted}
                |* standard output is
+               |
                |```
-               |$stdOut```
+               |$stdOut
+               |```
+               |
                |* interpretation results in the following symbol table
                |${
               symbolTable.foldLeft(None: Option[String]) { (markdown, symbolTableEntry) =>
