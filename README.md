@@ -140,6 +140,7 @@ print foo;
 
 ```
 26
+
 ```
 
 * interpretation results in the following symbol table
@@ -160,6 +161,7 @@ print foo;
 
 ```
 foobar
+
 ```
 
 * interpretation results in the following symbol table

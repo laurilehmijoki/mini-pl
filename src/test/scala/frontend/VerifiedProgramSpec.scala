@@ -8,19 +8,19 @@ import utils.{BashShell, FormattingContext}
 
 class VerifiedProgramSpec extends Specification {
 
-  samplePrograms.programs.flatMap { sampleProgram =>
+  samplePrograms.programs.foreach { sampleProgram =>
     val errorOrVerifiedProgram = frontendHelper.verify(sampleProgram.sourceCode)
 
-    val verificationTest = s"verifier" should {
+    s"verifier" should {
       s"correctly verify ${sampleProgram.sourceCode} in ${sampleProgram.description.toLowerCase()}" in {
         errorOrVerifiedProgram should beLike(sampleProgram.matcher)
       }
     }
 
-    val interpretationTest = for {
+    for {
       verifiedProgram <- errorOrVerifiedProgram.right.toOption
       interpretationResult <- sampleProgram.interpretationResult.ensuring(_.isDefined /* if the program is verified, expect there to be an interpretation result*/)
-    } yield {
+    } {
       s"interpretation of ${sampleProgram.sourceCode} in ${sampleProgram.description.toLowerCase()}" should {
         implicit val formattingContext: FormattingContext = BashShell
         val baos = new ByteArrayOutputStream()
@@ -39,10 +39,5 @@ class VerifiedProgramSpec extends Specification {
         }
       }
     }
-
-    verificationTest :: interpretationTest.map(_ :: Nil).getOrElse(Nil) :: Nil
-  }
-  samplePrograms.programs foreach { test =>
-    test
   }
 }
