@@ -27,7 +27,7 @@ object Token {
       val currentToken: CurrentToken = memo._2
       val previousCandidates = memo._1
       chr.toString match {
-        case whitespace(space) =>
+        case whitespace(_) =>
           val candidates = currentToken
             .map { currentTokenStr =>
               previousCandidates :+
