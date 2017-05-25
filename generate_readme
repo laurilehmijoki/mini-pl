@@ -8,6 +8,12 @@ echo -n "Generating $target..."
 
 sbt -batch --error "set showSuccess := false" "test:runMain docs.docGenerator" > $target
 
+doc_gen_return_code=$?
+if [ $doc_gen_return_code != 0 ]; then
+  echo "Error when executing doc generator: $doc_gen_return_code"
+  exit $doc_gen_return_code
+fi
+
 echo done
 
 echo Wrote the generated markdown into $target
