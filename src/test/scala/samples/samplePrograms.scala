@@ -115,7 +115,7 @@ object samplePrograms extends Specification {
     SampleProgram(
       "A correct program with integer arithmetics",
       """
-        |var z : int := 1 + 2 * 3 * 4;
+        |var z : int := 1 + 2*3 * 4;
         |var foo : int := 1 + z;
         |print foo;
         |""".stripMargin,

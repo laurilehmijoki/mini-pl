@@ -15,48 +15,59 @@ object Token {
   val intToken = "(\\d+)".r
   val stringToken = """("(.*)")""".r
   val identifierToken = "([a-zA-Z]+)".r
+  val operators = "+" :: "-" :: "*" :: "/" :: "<" :: "=" :: "&" :: "!" :: Nil
 
-  case class TokenCandidate(string: String, startIndex: Int)
+  case class UnidentifiedToken(string: String, startIndex: Int)
 
   def tokenize(source: String): Seq[Token] = {
     type CurrentToken = Option[String]
-    val tokenCandidates: Seq[TokenCandidate] = source.zipWithIndex.foldLeft((Nil, None): (Seq[TokenCandidate], CurrentToken)) { (memo, charAndPosition) =>
+    val unidentifiedTokens: Seq[UnidentifiedToken] = source.zipWithIndex.foldLeft((Nil, None): (Seq[UnidentifiedToken], CurrentToken)) { (memo, charAndPosition) =>
       val chr: Char = charAndPosition._1
       val position = charAndPosition._2
       val whitespace = "(\\s)".r
-      val currentToken: CurrentToken = memo._2
+      val currentTokenOptional: CurrentToken = memo._2
+      lazy val accumulatedToken = currentTokenOptional.map(currentToken => UnidentifiedToken(currentToken, position - currentToken.length))
       val previousCandidates = memo._1
       chr.toString match {
         case whitespace(_) =>
-          val candidates = currentToken
-            .map { currentTokenStr =>
-              previousCandidates :+
-                TokenCandidate(currentTokenStr, position - currentTokenStr.length)
-            }.getOrElse(previousCandidates)
+          val lexemes = accumulatedToken.map(previousCandidates :+ _).getOrElse(previousCandidates)
           (
-            candidates,
+            lexemes,
+            None
+          )
+        case str if currentTokenOptional.contains(":") && str == "=" => // the ":=" token
+          val assignmentToken = ":="
+          (
+            previousCandidates :+ UnidentifiedToken(assignmentToken, position - assignmentToken.length),
+            None
+          )
+        case operator if operators.contains(operator) =>
+          val lexemes = accumulatedToken.map(previousCandidates :+ _).getOrElse(previousCandidates)
+          val operatorStartPosition = position + accumulatedToken.map(_.startIndex).getOrElse(0) - operator.length
+          (
+            lexemes :+ UnidentifiedToken(operator, operatorStartPosition),
             None
           )
         case str =>
           (
             previousCandidates,
-            currentToken.map(_ + str).orElse(Some(str))
+            currentTokenOptional.map(_ + str).orElse(Some(str))
           )
       }
     }._1.flatMap { candidate =>
       val tokenWithStatementTerminator = "(.+)(;)".r
       candidate.string match {
         case tokenWithStatementTerminator(token, terminator) =>
-          TokenCandidate(token, candidate.startIndex) :: TokenCandidate(terminator, candidate.startIndex + token.length) :: Nil
+          UnidentifiedToken(token, candidate.startIndex) :: UnidentifiedToken(terminator, candidate.startIndex + token.length) :: Nil
         case _ =>
           candidate :: Nil
       }
     }
 
-    tokenCandidates.map(Token.from)
+    unidentifiedTokens.map(Token.from)
   }
 
-  def from(tokenCandidate: TokenCandidate): Token = {
+  def from(tokenCandidate: UnidentifiedToken): Token = {
     implicit val tokenLocation = TokenLocation(tokenCandidate.startIndex)
     tokenCandidate.string match {
       case t@"var" => VarKeyword(t)
