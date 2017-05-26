@@ -28,6 +28,15 @@ object Token {
       val currentTokenOptional: CurrentToken = memo._2
       lazy val accumulatedToken = currentTokenOptional.map(currentToken => UnidentifiedToken(currentToken, position - currentToken.length))
       val previousCandidates = memo._1
+      def resolveWith(token: String) = {
+        val previous = accumulatedToken.map(previousCandidates :+ _).getOrElse(previousCandidates)
+        val operatorStartPosition = position + accumulatedToken.map(_.startIndex).getOrElse(0) - token.length
+        (
+          previous :+ UnidentifiedToken(token, operatorStartPosition),
+          None
+        )
+      }
+
       chr.toString match {
         case whitespace(_) =>
           val lexemes = accumulatedToken.map(previousCandidates :+ _).getOrElse(previousCandidates)
@@ -42,27 +51,16 @@ object Token {
             None
           )
         case operator if operators.contains(operator) =>
-          val lexemes = accumulatedToken.map(previousCandidates :+ _).getOrElse(previousCandidates)
-          val operatorStartPosition = position + accumulatedToken.map(_.startIndex).getOrElse(0) - operator.length
-          (
-            lexemes :+ UnidentifiedToken(operator, operatorStartPosition),
-            None
-          )
+          resolveWith(operator)
+        case terminator@";" =>
+          resolveWith(terminator)
         case str =>
           (
             previousCandidates,
             currentTokenOptional.map(_ + str).orElse(Some(str))
           )
       }
-    }._1.flatMap { candidate =>
-      val tokenWithStatementTerminator = "(.+)(;)".r
-      candidate.string match {
-        case tokenWithStatementTerminator(token, terminator) =>
-          UnidentifiedToken(token, candidate.startIndex) :: UnidentifiedToken(terminator, candidate.startIndex + token.length) :: Nil
-        case _ =>
-          candidate :: Nil
-      }
-    }
+    }._1
 
     unidentifiedTokens.map(Token.from)
   }
