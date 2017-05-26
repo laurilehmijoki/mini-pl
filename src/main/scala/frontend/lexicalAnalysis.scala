@@ -44,7 +44,7 @@ object Token {
             lexemes,
             None
           )
-        case str if currentTokenOptional.contains(":") && str == "=" => // the ":=" token
+        case _@"=" if currentTokenOptional.contains(":") => // the ":=" token
           val assignmentToken = ":="
           (
             previousCandidates :+ UnidentifiedToken(assignmentToken, position - assignmentToken.length),
