@@ -40,10 +40,7 @@ object Token {
       chr.toString match {
         case whitespace(_) =>
           val lexemes = accumulatedToken.map(previousCandidates :+ _).getOrElse(previousCandidates)
-          (
-            lexemes,
-            None
-          )
+          (lexemes, None)
         case _@"=" if currentTokenOptional.contains(":") => // the ":=" token
           val assignmentToken = ":="
           (
