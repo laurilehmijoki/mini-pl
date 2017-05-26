@@ -25,36 +25,42 @@ object Token {
       val chr: Char = charAndPosition._1
       val position = charAndPosition._2
       val whitespace = "(\\s)".r
-      val currentTokenOptional: CurrentToken = memo._2
-      lazy val accumulatedToken = currentTokenOptional.map(currentToken => UnidentifiedToken(currentToken, position - currentToken.length))
+      val accumulatedString: CurrentToken = memo._2
+      lazy val accumulatedToken = accumulatedString.map(currentToken => UnidentifiedToken(currentToken, position - currentToken.length))
       val previousCandidates = memo._1
-      def resolveWith(token: String) = {
+      def resolveWithAccumulatedAnd(token: String) = {
         val previous = accumulatedToken.map(previousCandidates :+ _).getOrElse(previousCandidates)
-        val operatorStartPosition = position + accumulatedToken.map(_.startIndex).getOrElse(0) - token.length
         (
-          previous :+ UnidentifiedToken(token, operatorStartPosition),
+          previous :+ UnidentifiedToken(
+            token,
+            position + accumulatedToken.map(_.startIndex).getOrElse(0) - token.length
+          ),
           None
         )
       }
+
+      def discardAccumulatedTokenAndResolveWith(completeToken: String) =
+        (
+          previousCandidates :+ UnidentifiedToken(completeToken, position - completeToken.length),
+          None
+        )
 
       chr.toString match {
         case whitespace(_) =>
           val lexemes = accumulatedToken.map(previousCandidates :+ _).getOrElse(previousCandidates)
           (lexemes, None)
-        case _@"=" if currentTokenOptional.contains(":") => // the ":=" token
-          val assignmentToken = ":="
-          (
-            previousCandidates :+ UnidentifiedToken(assignmentToken, position - assignmentToken.length),
-            None
-          )
+        case _@"=" if accumulatedString.contains(":") => // the ":=" token
+          discardAccumulatedTokenAndResolveWith(":=")
+        case _@"." if accumulatedString.contains(".") =>
+          discardAccumulatedTokenAndResolveWith("..")
         case operator if operators.contains(operator) =>
-          resolveWith(operator)
+          resolveWithAccumulatedAnd(operator)
         case terminator@";" =>
-          resolveWith(terminator)
-        case str =>
+          resolveWithAccumulatedAnd(terminator)
+        case incrementToAccumulation =>
           (
             previousCandidates,
-            currentTokenOptional.map(_ + str).orElse(Some(str))
+            accumulatedString.map(_ + incrementToAccumulation).orElse(Some(incrementToAccumulation))
           )
       }
     }._1
