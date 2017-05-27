@@ -147,6 +147,18 @@ object samplePrograms extends Specification {
         ),
         stdout = Some("foobar")
       ))
+    ),
+    SampleProgram(
+      "A program with for loop",
+      """
+        |var z : int;
+        |for z in 0..5 do
+        |end for;
+        |""".stripMargin,
+      {
+        case Right(verifiedProgram) => verifiedProgram.statements must haveLength(2)
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = None
     )
   )
 }

@@ -26,6 +26,7 @@ object StatementSequence {
     { VarDeclaration.parse(_) } ::
       { VarAssignment.parse(_) } ::
       { Print.parse(_) } ::
+      { ForLoop.parse(_) } ::
       Nil
 
   def parse(tokens: Seq[Token]): Seq[ParseResult] = {
@@ -57,6 +58,22 @@ object StatementSequence {
     astRoot <- expr.toExpression(expr.toPostfix(expressionTokens))
   } yield astRoot
 }
+
+// "for" <var_ident> "in" <expr> ".." <expr> "do"
+//     <stmts> "end" "for"
+case class ForLoop(identifierToken: IdentifierToken, from: Expression, to: Expression, statements: Seq[StatementSequence]) extends StatementSequence
+
+object ForLoop {
+  def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
+    tokens match {
+      case (_: ForKeyword) +: (second: IdentifierToken) +: (_: InKeyword)  =>
+
+      case _ =>
+        None
+    }
+
+}
+
 // <var_ident> ":=" <expr>
 case class VarAssignment(identifierToken: IdentifierToken, expression: Expression) extends StatementSequence
 

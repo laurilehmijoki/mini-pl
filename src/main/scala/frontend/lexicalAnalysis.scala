@@ -16,6 +16,8 @@ object Token {
   val stringToken = """("(.*)")""".r
   val identifierToken = "([a-zA-Z]+)".r
   val operators = "+" :: "-" :: "*" :: "/" :: "<" :: "=" :: "&" :: "!" :: Nil
+  val keywords = "var" :: "for" :: "end" :: "in" :: "do" :: "read" ::
+                 "print" :: "int" :: "string" :: "bool" :: "assert" :: Nil
 
   case class UnidentifiedToken(string: String, startIndex: Int)
 
@@ -39,10 +41,22 @@ object Token {
         )
       }
 
+      def resolveAccumulatedAndMemoize(memoized: String) =
+        (
+          accumulatedToken.map(previousCandidates :+ _).getOrElse(previousCandidates),
+          Some(memoized)
+        )
+
       def discardAccumulatedTokenAndResolveWith(completeToken: String) =
         (
           previousCandidates :+ UnidentifiedToken(completeToken, position - completeToken.length),
           None
+        )
+
+      def incrementToAccumulation(increment: String) =
+        (
+          previousCandidates,
+          accumulatedString.map(_ + increment).orElse(Some(increment))
         )
 
       chr.toString match {
@@ -51,17 +65,21 @@ object Token {
           (lexemes, None)
         case _@"=" if accumulatedString.contains(":") => // the ":=" token
           discardAccumulatedTokenAndResolveWith(":=")
-        case _@"." if accumulatedString.contains(".") =>
-          discardAccumulatedTokenAndResolveWith("..")
+        case _@"."  =>
+          accumulatedString match {
+            case Some(_@".") =>
+              discardAccumulatedTokenAndResolveWith("..")
+            case None =>
+              incrementToAccumulation(".")
+            case _ =>
+              resolveAccumulatedAndMemoize(".")
+          }
         case operator if operators.contains(operator) =>
           resolveWithAccumulatedAnd(operator)
         case terminator@";" =>
           resolveWithAccumulatedAnd(terminator)
-        case incrementToAccumulation =>
-          (
-            previousCandidates,
-            accumulatedString.map(_ + incrementToAccumulation).orElse(Some(incrementToAccumulation))
-          )
+        case x =>
+          incrementToAccumulation(x)
       }
     }._1
 
@@ -73,6 +91,11 @@ object Token {
     tokenCandidate.string match {
       case t@"var" => VarKeyword(t)
       case t@"print" => PrintKeyword(t)
+      case t@"for" => ForKeyword(t)
+      case t@"in" => InKeyword(t)
+      case t@"do" => DoKeyword(t)
+      case t@"end" => EndKeyword(t)
+      case t@".." => RangeToken(t)
       case t@"int" => IntTypeKeyword(t)
       case t@"string" => StringTypeKeyword(t)
       case intToken(intCandidate) => Try(intCandidate.toInt).toOption.map(IntToken(_)).getOrElse(Unrecognised(intCandidate))
@@ -114,7 +137,13 @@ object Token {
 
   case class StringToken(token: String, containedString: String)(implicit val tokenLocation: TokenLocation) extends OperandToken with Terminal
 
+  case class RangeToken(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
+
   sealed trait Keyword extends Token
+  case class ForKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
+  case class InKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
+  case class DoKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
+  case class EndKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
   case class VarKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
   case class PrintKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
   sealed trait TypeKeyword extends Keyword

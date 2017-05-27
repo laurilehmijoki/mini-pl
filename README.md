@@ -185,6 +185,21 @@ foobar
   * `z` -> `foo`
   * `foo` -> `foobar`
 
+### A program with for loop
+
+```
+var z : int;
+for z in 0..5 do
+end for;
+```
+
+
+* compilation fails
+* error:
+```
+Syntax error: Cannot find parser for tokens List(ForKeyword(for), IdentifierToken(z), InKeyword(in), IntToken(0), RangeToken(..), IntToken(5), DoKeyword(do), EndKeyword(end), ForKeyword(for), SemicolonToken(;))
+```
+
 
 ## Development
 
