@@ -1,6 +1,6 @@
 package frontend
 
-import frontend.StatementSequence.{StatementParseResultOption, errorOrExpression}
+import frontend.StatementSequence.{ParseResult, errorOrExpression}
 import frontend.Token._
 
 sealed trait Program
@@ -18,8 +18,7 @@ sealed trait StatementSequence extends Program
 
 object StatementSequence {
   type ParseResult = Either[ParseError, StatementSequence]
-  type StatementParseResultOption = Option[ParseResult]
-  type StatementParser = (Seq[Token]) => StatementParseResultOption
+  type StatementParser = (Seq[Token]) => Option[ParseResult]
 
   def parse(tokens: Seq[Token]): Seq[ParseResult] = {
     val tokenStatements = tokens.foldLeft((None: Option[Token], Seq[Seq[Token]]())) { (memo, token) =>
@@ -47,7 +46,7 @@ object StatementSequence {
         Nil
 
     tokenStatements.map { tokensInStatement =>
-      parsers.foldLeft(None: StatementParseResultOption) { (result, parse) =>
+      parsers.foldLeft(None: Option[ParseResult]) { (result, parse) =>
         result match {
           case parsedResult@Some(_) => parsedResult
           case None => parse(tokensInStatement)
@@ -65,7 +64,7 @@ object StatementSequence {
 case class VarAssignment(identifierToken: IdentifierToken, expression: Expression) extends StatementSequence
 
 object VarAssignment {
-  def parse(tokens: Seq[Token]): StatementParseResultOption =
+  def parse(tokens: Seq[Token]): Option[ParseResult] =
     tokens match {
       case (identifierToken: IdentifierToken) +: (_: AssignmentToken) +: third :+ (_: SemicolonToken) =>
         Some(errorOrExpression(third).map(expression => VarAssignment(identifierToken, expression)))
@@ -78,7 +77,7 @@ object VarAssignment {
 case class Print(expression: Expression) extends StatementSequence
 
 object Print {
-  def parse(tokens: Seq[Token]): StatementParseResultOption =
+  def parse(tokens: Seq[Token]): Option[ParseResult] =
     tokens match {
       case (_: PrintKeyword) +: second :+ (_: SemicolonToken) =>
         Some(errorOrExpression(second).map(Print(_)))
@@ -91,7 +90,7 @@ object Print {
 case class VarDeclaration(identifierToken: IdentifierToken, typeKeyword: TypeKeyword, expression: Option[Expression]) extends StatementSequence
 
 object VarDeclaration {
-  def parse(tokens: Seq[Token]): StatementParseResultOption =
+  def parse(tokens: Seq[Token]): Option[ParseResult] =
     tokens match {
       case (_: VarKeyword) +: second +: third +: fourth +: ((_: SemicolonToken) :: Nil) => // // "var" <var_ident> ":" <type>
         val errorOrVarStatement = identifierOrError(second, tokens) :: typePrefixOrError(third, tokens) :: typeOrError(fourth,tokens) :: Nil match {
