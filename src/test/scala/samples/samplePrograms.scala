@@ -158,7 +158,12 @@ object samplePrograms extends Specification {
       {
         case Right(verifiedProgram) => verifiedProgram.statements must haveLength(2)
       }: PartialFunction[VerificationResult, MatchResult[_]],
-      interpretationResult = None
+      interpretationResult = Some(InterpretationResult(
+        Map(
+          "z" -> IntegerValue(4)
+        ),
+        stdout = None
+      ))
     )
   )
 }

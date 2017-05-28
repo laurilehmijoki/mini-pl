@@ -17,6 +17,11 @@ object SemanticAnalysis {
           implicit val expectedReturnType: ExpectedReturnType = None // TODO repetition here, can we remove it?
           resolveUndeclaredIdentifiers(varAssignment, statementsBeforeThisStatement) ++
             resolveExpressionErrors(varAssignment.expression, statementsBeforeThisStatement)
+        case forLoop: ForLoop =>
+          implicit val expectedReturnType: ExpectedReturnType = None // TODO repetition here, can we remove it?
+          resolveUndeclaredIdentifiers(forLoop, statementsBeforeThisStatement) ++
+            resolveExpressionErrors(forLoop.from, statementsBeforeThisStatement)
+            resolveExpressionErrors(forLoop.to, statementsBeforeThisStatement)
         case varDeclaration: VarDeclaration =>
           implicit val expectedReturnType: ExpectedReturnType = Some(varDeclaration.typeKeyword match {
             case _: StringTypeKeyword => classOf[StringToken]
@@ -91,8 +96,8 @@ object SemanticAnalysis {
         findTerminalType(operator.left, statementsBeforeThisStatement.drop(1))
       case operand: OperandNode =>
         operand.operandToken match {
-          case s: StringToken => Some(classOf[StringToken])
-          case i: IntToken => Some(classOf[IntToken])
+          case _: StringToken => Some(classOf[StringToken])
+          case _: IntToken => Some(classOf[IntToken])
           case i: IdentifierToken =>
             statementsBeforeThisStatement
               .reverse // We are interested in the latest definition of the identifier
@@ -105,7 +110,7 @@ object SemanticAnalysis {
                     }
                   else
                     Nil
-                case _: Print | _: VarAssignment =>
+                case _: Print | _: VarAssignment | _: ForLoop =>
                   Nil
               }
               .headOption
@@ -116,6 +121,7 @@ object SemanticAnalysis {
     statementSequence match {
       case print: Print => findIdentifiers(print.expression)
       case varAssignment: VarAssignment => varAssignment.identifierToken +: findIdentifiers(varAssignment.expression)
+      case forLoop: ForLoop => (forLoop.identifierToken +: findIdentifiers(forLoop.from)) ++ findIdentifiers(forLoop.to)
       case varDeclaration: VarDeclaration => varDeclaration.expression.map(findIdentifiers).getOrElse(Nil)
     }
 
@@ -124,7 +130,7 @@ object SemanticAnalysis {
     referencedIdentifiersInThisStatement.flatMap { identifier =>
       val identifierIsDeclared = statementsBeforeThisStatement.exists {
         case varDeclaration: VarDeclaration => referencedIdentifiersInThisStatement.contains(varDeclaration.identifierToken)
-        case Print(_) | VarAssignment(_, _) => false
+        case _: Print | _: VarAssignment | _: ForLoop => false
       }
       if (identifierIsDeclared)
         Nil

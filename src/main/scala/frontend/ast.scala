@@ -11,6 +11,7 @@ object astUtils {
       statement match {
         case v: VarDeclaration => AstNode(v, children = Nil)
         case v: VarAssignment=> AstNode(v, children = Nil)
+        case f: ForLoop=> AstNode(f, children = Nil) // TODO children
         case p: Print => AstNode(p, children = Nil)
       }
     statements match {

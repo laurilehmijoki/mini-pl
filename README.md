@@ -194,11 +194,15 @@ end for;
 ```
 
 
-* compilation fails
-* error:
+* compilation succeeds
+* standard output is
+
 ```
-Syntax error: Cannot find parser for tokens List(ForKeyword(for), IdentifierToken(z), InKeyword(in), IntToken(0), RangeToken(..), IntToken(5), DoKeyword(do), EndKeyword(end), ForKeyword(for), SemicolonToken(;))
+
 ```
+
+* interpretation results in the following symbol table
+  * `z` -> `4`
 
 
 ## Development

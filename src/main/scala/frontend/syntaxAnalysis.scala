@@ -2,7 +2,7 @@ package frontend
 
 import frontend.StatementSequence.{ParseResult, errorOrExpression}
 import frontend.Token._
-import frontend.VarDeclaration.LeftSemicolonRight
+import frontend.VarDeclaration._
 
 sealed trait Program
 
@@ -66,8 +66,28 @@ case class ForLoop(identifierToken: IdentifierToken, from: Expression, to: Expre
 object ForLoop {
   def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
     tokens match {
-      case (_: ForKeyword) +: (second: IdentifierToken) +: (_: InKeyword)  =>
-
+      case (_: ForKeyword) +: second +: third +: `l..r`((fromTokenCandidates, rightFromRangeToken)) =>
+        rightFromRangeToken match {
+          case `l<do>r`(toTokenCandidates, rightFromDo) =>
+            rightFromDo match {
+              case `l<end for;>r`(forLoopBodyStatements, unconsumedTokens) =>
+                val errorOrStatement = identifierOrError(second, tokens) ::
+                  inKeywordOrError(third, tokens) ::
+                  errorOrExpression(fromTokenCandidates) ::
+                  errorOrExpression(toTokenCandidates) :: // TODO Parse body
+                  Nil match {
+                    case Right(identifier: IdentifierToken) +: Right(_) +: Right(fromExpression: Expression) +: Right(toExpression: Expression) +: _ =>
+                      Right(ForLoop(identifier, fromExpression, toExpression, Nil))
+                    case xs =>
+                      Left(ManyErrors(xs.collect {
+                        case Left(parseError) => parseError
+                      }))
+                  }
+                Some(errorOrStatement, unconsumedTokens)
+              case _ => None
+            }
+          case _ => None
+        }
       case _ =>
         None
     }
@@ -80,7 +100,7 @@ case class VarAssignment(identifierToken: IdentifierToken, expression: Expressio
 object VarAssignment {
   def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
     tokens match {
-      case (identifierToken: IdentifierToken) +: (_: AssignmentToken) +: LeftSemicolonRight((leftOfSemicolon, rightOfSemicolon)) =>
+      case (identifierToken: IdentifierToken) +: (_: AssignmentToken) +: `l;r`((leftOfSemicolon, rightOfSemicolon)) =>
         Some((errorOrExpression(leftOfSemicolon).map(expression => VarAssignment(identifierToken, expression)), rightOfSemicolon))
       case _ =>
         None
@@ -93,7 +113,7 @@ case class Print(expression: Expression) extends StatementSequence
 object Print {
   def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
     tokens match {
-      case (_: PrintKeyword) +: LeftSemicolonRight((leftOfSemicolon, rightOfSemicolon)) =>
+      case (_: PrintKeyword) +: `l;r`((leftOfSemicolon, rightOfSemicolon)) =>
         Some((errorOrExpression(leftOfSemicolon).map(Print(_)), rightOfSemicolon))
       case _ =>
         None
@@ -116,7 +136,7 @@ object VarDeclaration {
             }))
         }
         Some((errorOrVarStatement, tail))
-      case (_: VarKeyword) +: second +: third +: fourth +: fifth +: LeftSemicolonRight((leftOfSemicolon, rightOfSemicolon)) => // "var" <var_ident> ":" <type> ":=" <expr>
+      case (_: VarKeyword) +: second +: third +: fourth +: fifth +: `l;r`((leftOfSemicolon, rightOfSemicolon))  => // "var" <var_ident> ":" <type> ":=" <expr>
         val assignmentOrError: Either[ParseError, Token] = fifth match {
           case assignment: AssignmentToken => Right(assignment)
           case wrongToken => Left(SyntaxError(tokens, s"$wrongToken is not the expected $AssignmentToken"))
@@ -145,15 +165,34 @@ object VarDeclaration {
     case wrongToken => Left(SyntaxError(tokens, s"Unexpected type prefix $wrongToken, expected $TypePrefixToken"))
   }
 
+  def inKeywordOrError(token: Token, tokens: Seq[Token]): Either[ParseError, Unit] = token match {
+    case InKeyword(_) => Right(Unit)
+    case wrongToken => Left(SyntaxError(tokens, s"Unexpected $wrongToken, expected $InKeyword"))
+  }
+
+
   def typeOrError(token: Token, tokens: Seq[Token]): Either[ParseError, TypeKeyword] = token match {
     case typeKeyword: TypeKeyword => Right(typeKeyword)
     case wrongToken => Left(SyntaxError(tokens, s"Unexpected type keyword $wrongToken"))
   }
 
-  object LeftSemicolonRight {
+  val `l;r` = LeftRightSplitter(";")
+  val `l..r` = LeftRightSplitter("..")
+  val `l<do>r` = LeftRightSplitter("do")
+
+  object `l<end for;>r` {
+    def unapply(tokens: Seq[Token]): Option[(Seq[Token], Seq[Token])] = {
+      tokens.zipWithIndex.collectFirst {
+        case (_: EndKeyword, index) if tokens.slice(index + 1, index + 3).map(_.token) == Seq("for", ";") =>
+          (tokens.take(index), tokens.drop(index + 3))
+      }
+    }
+  }
+
+  case class LeftRightSplitter(separator: String) {
     def unapply(tokens: Seq[Token]): Option[(Seq[Token], Seq[Token])] =
       tokens.zipWithIndex.collectFirst {
-        case (s: SemicolonToken, index) =>
+        case (t, index) if t.token == separator =>
           (tokens.take(index), tokens.drop(index + 1))
       }
   }
