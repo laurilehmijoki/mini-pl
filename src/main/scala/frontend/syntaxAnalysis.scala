@@ -1,8 +1,8 @@
 package frontend
 
-import frontend.Statement.{ParseResult, errorOrExpression}
+import frontend.Statement.{ParseResult}
 import frontend.Token._
-import frontend.VarDeclaration._
+import frontend.ParseHelpers._
 
 sealed trait Program
 
@@ -52,11 +52,6 @@ object Statement {
       case None => Left(ParserNotFound(tokens)) :: Nil
     }
   }
-
-  def errorOrExpression(tokens: Seq[Token]): Either[ParseError, Expression] = for {
-    expressionTokens <- expr.expressionTokens(tokens)
-    astRoot <- expr.toExpression(expr.toPostfix(expressionTokens))
-  } yield astRoot
 }
 
 // "for" <var_ident> "in" <expr> ".." <expr> "do"
@@ -161,6 +156,9 @@ object VarDeclaration {
       case _ =>
         None
     }
+}
+
+object ParseHelpers {
 
   def identifierOrError(token: Token, tokens: Seq[Token]): Either[ParseError, IdentifierToken] = token match {
     case ident: IdentifierToken => Right(ident)
@@ -203,4 +201,9 @@ object VarDeclaration {
           (tokens.take(index), tokens.drop(index + 1))
       }
   }
+
+  def errorOrExpression(tokens: Seq[Token]): Either[ParseError, Expression] = for {
+    expressionTokens <- expr.expressionTokens(tokens)
+    astRoot <- expr.toExpression(expr.toPostfix(expressionTokens))
+  } yield astRoot
 }
