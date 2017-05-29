@@ -12,21 +12,21 @@ case class StringValue(value: String) extends SymbolValue
 
 object interpreter {
 
-  def interpret(program: String, systemOut: PrintStream)(implicit formattingContext: FormattingContext): Int = {
+  def interpret(program: String)(implicit formattingContext: FormattingContext, systemOut: PrintStream): Int = {
     val exitStatus = frontendHelper.verify(program) match {
       case Left(err: Seq[CompilationError]) =>
         val errorReport = errorReporter.createErrorReport(program, err)
         println(s"${errorReport.headlines.mkString("\n")}\n${errorReport.highlightedSourceCode}")
         1
       case Right(verifiedProgram) =>
-        visit(verifiedProgram.statements, systemOut, Map[String, SymbolValue]())
+        visit(verifiedProgram.statements, Map[String, SymbolValue]())
         0
     }
     exitStatus
   }
 
-  def interpret(verifiedProgram: VerifiedProgram, systemOut: PrintStream): SymbolTable = {
-    visit(verifiedProgram.statements, systemOut, Map[String, SymbolValue]())
+  def interpret(verifiedProgram: VerifiedProgram)(implicit systemOut: PrintStream): SymbolTable = {
+    visit(verifiedProgram.statements, Map[String, SymbolValue]())
   }
 
   type SymbolTable = Map[String, SymbolValue]
@@ -35,12 +35,12 @@ object interpreter {
   def updateWithExpression(symbols: SymbolTable, identifierToken: IdentifierToken, expression: Expression): SymbolTable =
     updateSymbol(symbols, identifierToken, evaluate(expression, symbols))
 
-  def visit(statements: Seq[Statement], systemOut: PrintStream, symbols: SymbolTable): SymbolTable =
+  def visit(statements: Seq[Statement], symbols: SymbolTable)(implicit systemOut: PrintStream): SymbolTable =
     statements.foldLeft(symbols) { (symbolsMemo, statement) =>
-      visit(statement, systemOut, symbolsMemo)
+      visit(statement, symbolsMemo)
     }
 
-  def visit(statement: Statement, systemOut: PrintStream, symbols: SymbolTable): SymbolTable =
+  def visit(statement: Statement, symbols: SymbolTable)(implicit systemOut: PrintStream): SymbolTable =
     statement match {
       case f: ForLoop =>
         val (from, to) = (evaluate(f.from, symbols), evaluate(f.to, symbols)) match {
@@ -49,7 +49,7 @@ object interpreter {
         }
         (from until to).foldLeft(symbols) { (symbolsMemo: SymbolTable, step: Int) =>
           val symbolsBeforeBody = updateSymbol(symbolsMemo, f.identifierToken, IntegerValue(step))
-          visit(f.statements, systemOut, symbolsBeforeBody)
+          visit(f.statements, symbolsBeforeBody)
         }
       case v: VarDeclaration =>
         val symbolValue = v.expression

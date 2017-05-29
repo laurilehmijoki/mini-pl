@@ -82,7 +82,8 @@ MIT
         .right
         .map { verifiedProgram =>
           val baos = new ByteArrayOutputStream()
-          val symbolTable = interpret(verifiedProgram, new PrintStream(baos))
+          implicit val stdOut: PrintStream = new PrintStream(baos)
+          val symbolTable = interpret(verifiedProgram)
           (symbolTable, new String(baos.toByteArray, "utf-8"))
         }
 
