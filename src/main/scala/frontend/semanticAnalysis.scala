@@ -22,6 +22,9 @@ object SemanticAnalysis {
           resolveUndeclaredIdentifiers(forLoop, statementsBeforeThisStatement) ++
             resolveExpressionErrors(forLoop.from, statementsBeforeThisStatement)
             resolveExpressionErrors(forLoop.to, statementsBeforeThisStatement)
+            // TODO verify that the control variable is not reassigned within the loop
+            // TODO Also verify that the range is from int to another
+            // TODO Also verify that there are no VarDeclarations in the loop
         case varDeclaration: VarDeclaration =>
           implicit val expectedReturnType: ExpectedReturnType = Some(varDeclaration.typeKeyword match {
             case _: StringTypeKeyword => classOf[StringToken]

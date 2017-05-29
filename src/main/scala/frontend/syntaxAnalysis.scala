@@ -71,13 +71,20 @@ object ForLoop {
           case `l<do>r`(toTokenCandidates, rightFromDo) =>
             rightFromDo match {
               case `l<end for;>r`(forLoopBodyStatements, unconsumedTokens) =>
+              case class StatementSeq(statements: Seq[StatementSequence])
+                val statements: Either[ParseError, StatementSeq] = frontendHelper
+                  .errorsOrStatements(StatementSequence.parse(forLoopBodyStatements))
+                  .left.map(ManyErrors)
+                  .right.map(StatementSeq)
+
                 val errorOrStatement = identifierOrError(second, tokens) ::
                   inKeywordOrError(third, tokens) ::
                   errorOrExpression(fromTokenCandidates) ::
-                  errorOrExpression(toTokenCandidates) :: // TODO Parse body
+                  errorOrExpression(toTokenCandidates) ::
+                  statements ::
                   Nil match {
-                    case Right(identifier: IdentifierToken) +: Right(_) +: Right(fromExpression: Expression) +: Right(toExpression: Expression) +: _ =>
-                      Right(ForLoop(identifier, fromExpression, toExpression, Nil))
+                    case Right(identifier: IdentifierToken) +: Right(_) +: Right(fromExpression: Expression) +: Right(toExpression: Expression) +: Right(loopStatements: StatementSeq) +: _ =>
+                      Right(ForLoop(identifier, fromExpression, toExpression, loopStatements.statements))
                     case xs =>
                       Left(ManyErrors(xs.collect {
                         case Left(parseError) => parseError

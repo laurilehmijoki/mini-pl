@@ -13,22 +13,20 @@ case class StringValue(value: String) extends SymbolValue
 object interpreter {
 
   def interpret(program: String, systemOut: PrintStream)(implicit formattingContext: FormattingContext): Int = {
-    val verifiedProgram = frontendHelper.verify(program)
-    val exitStatus = verifiedProgram.right.map(program => astUtils.build(program.statements)) match {
+    val exitStatus = frontendHelper.verify(program) match {
       case Left(err: Seq[CompilationError]) =>
         val errorReport = errorReporter.createErrorReport(program, err)
         println(s"${errorReport.headlines.mkString("\n")}\n${errorReport.highlightedSourceCode}")
         1
-      case Right(ast) =>
-        visit(ast, systemOut)
+      case Right(verifiedProgram) =>
+        visit(verifiedProgram.statements, systemOut, Map[String, SymbolValue]())
         0
     }
     exitStatus
   }
 
   def interpret(verifiedProgram: VerifiedProgram, systemOut: PrintStream): SymbolTable = {
-    val ast = astUtils.build(verifiedProgram.statements)
-    visit(ast, systemOut)
+    visit(verifiedProgram.statements, systemOut, Map[String, SymbolValue]())
   }
 
   type SymbolTable = Map[String, SymbolValue]
@@ -37,39 +35,36 @@ object interpreter {
   def updateWithExpression(symbols: SymbolTable, identifierToken: IdentifierToken, expression: Expression): SymbolTable =
     updateSymbol(symbols, identifierToken, evaluate(expression, symbols))
 
-  def visit(ast: Ast, systemOut: PrintStream, symbols: SymbolTable = Map()): SymbolTable =
-    ast match {
-      case EmptyNode => symbols
-      case ast: AstNode =>
+  def visit(statements: Seq[StatementSequence], systemOut: PrintStream, symbols: SymbolTable): SymbolTable =
+    statements.foldLeft(symbols) { (symbolsMemo, statement) =>
+      visit(statement, systemOut, symbolsMemo)
+    }
 
-        val symbolsAfterStatement: SymbolTable = ast.statement match {
-          case f: ForLoop =>
-            val (from, to) = (evaluate(f.from, symbols), evaluate(f.to, symbols)) match {
-              case (IntegerValue(fromInt), IntegerValue(toInt)) => (fromInt, toInt)
-              case (a, b) => throw new RuntimeException(s"Cannot loop from $a to $b")
-            }
-            (from until to).foldLeft(symbols) { (symbolsMemo: SymbolTable, step: Int) =>
-              updateSymbol(symbolsMemo, f.identifierToken, IntegerValue(step))
-            }
-          case v: VarDeclaration =>
-            val symbolValue = v.expression
-              .map(expr => evaluate(expr, symbols))
-              .getOrElse(defaultValue(v.typeKeyword))
-            updateSymbol(symbols, v.identifierToken, symbolValue)
-          case v: VarAssignment =>
-            updateWithExpression(symbols, v.identifierToken, v.expression)
-          case p: Print =>
-            val symbolValue = evaluate(p.expression, symbols)
-            symbolValue match {
-              case i: IntegerValue => systemOut.print(i.value)
-              case s: StringValue => systemOut.print(s.value)
-            }
-            symbols
+  def visit(statementSequence: StatementSequence, systemOut: PrintStream, symbols: SymbolTable): SymbolTable =
+    statementSequence match {
+      case f: ForLoop =>
+        val (from, to) = (evaluate(f.from, symbols), evaluate(f.to, symbols)) match {
+          case (IntegerValue(fromInt), IntegerValue(toInt)) => (fromInt, toInt)
+          case (a, b) => throw new RuntimeException(s"Cannot loop from $a to $b")
         }
-
-        ast.children.foldLeft(symbolsAfterStatement) { (syms, node) =>
-          visit(node, systemOut, syms)
+        (from until to).foldLeft(symbols) { (symbolsMemo: SymbolTable, step: Int) =>
+          val symbolsBeforeBody = updateSymbol(symbolsMemo, f.identifierToken, IntegerValue(step))
+          visit(f.statements, systemOut, symbolsBeforeBody)
         }
+      case v: VarDeclaration =>
+        val symbolValue = v.expression
+          .map(expr => evaluate(expr, symbols))
+          .getOrElse(defaultValue(v.typeKeyword))
+        updateSymbol(symbols, v.identifierToken, symbolValue)
+      case v: VarAssignment =>
+        updateWithExpression(symbols, v.identifierToken, v.expression)
+      case p: Print =>
+        val symbolValue = evaluate(p.expression, symbols)
+        symbolValue match {
+          case i: IntegerValue => systemOut.print(i.value)
+          case s: StringValue => systemOut.print(s.value)
+        }
+        symbols
     }
 
   def evaluate(rootNode: Expression, symbols: SymbolTable): SymbolValue =

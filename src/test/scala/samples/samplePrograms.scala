@@ -153,6 +153,7 @@ object samplePrograms extends Specification {
       """
         |var z : int;
         |for z in 0..5 do
+        |  print z;
         |end for;
         |""".stripMargin,
       {
@@ -162,7 +163,7 @@ object samplePrograms extends Specification {
         Map(
           "z" -> IntegerValue(4)
         ),
-        stdout = None
+        stdout = Some("01234")
       ))
     )
   )

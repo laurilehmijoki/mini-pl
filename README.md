@@ -190,6 +190,7 @@ foobar
 ```
 var z : int;
 for z in 0..5 do
+  print z;
 end for;
 ```
 
@@ -198,7 +199,7 @@ end for;
 * standard output is
 
 ```
-
+01234
 ```
 
 * interpretation results in the following symbol table
