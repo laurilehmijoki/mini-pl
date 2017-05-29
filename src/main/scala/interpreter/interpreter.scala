@@ -35,13 +35,13 @@ object interpreter {
   def updateWithExpression(symbols: SymbolTable, identifierToken: IdentifierToken, expression: Expression): SymbolTable =
     updateSymbol(symbols, identifierToken, evaluate(expression, symbols))
 
-  def visit(statements: Seq[StatementSequence], systemOut: PrintStream, symbols: SymbolTable): SymbolTable =
+  def visit(statements: Seq[Statement], systemOut: PrintStream, symbols: SymbolTable): SymbolTable =
     statements.foldLeft(symbols) { (symbolsMemo, statement) =>
       visit(statement, systemOut, symbolsMemo)
     }
 
-  def visit(statementSequence: StatementSequence, systemOut: PrintStream, symbols: SymbolTable): SymbolTable =
-    statementSequence match {
+  def visit(statement: Statement, systemOut: PrintStream, symbols: SymbolTable): SymbolTable =
+    statement match {
       case f: ForLoop =>
         val (from, to) = (evaluate(f.from, symbols), evaluate(f.to, symbols)) match {
           case (IntegerValue(fromInt), IntegerValue(toInt)) => (fromInt, toInt)

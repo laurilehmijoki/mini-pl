@@ -2,10 +2,10 @@ package frontend
 
 import frontend.Token._
 
-case class VerifiedProgram(statements: Seq[StatementSequence])
+case class VerifiedProgram(statements: Seq[Statement])
 
 object SemanticAnalysis {
-  def verify(statements: Seq[StatementSequence]): Either[Seq[CompilationError], VerifiedProgram] =
+  def verify(statements: Seq[Statement]): Either[Seq[CompilationError], VerifiedProgram] =
     statements.zipWithIndex.flatMap(Function.tupled { (statement, index) =>
       lazy val statementsBeforeThisStatement = statements.take(index)
       statement match {
@@ -56,7 +56,7 @@ object SemanticAnalysis {
   type TerminalType = Class[_ <: Terminal]
   type ExpectedReturnType = Option[TerminalType]
 
-  def resolveExpressionErrors(expression: Expression, statementsBeforeThisStatement: Seq[StatementSequence])(implicit expectedResultType: ExpectedReturnType): Seq[CompilationError] = {
+  def resolveExpressionErrors(expression: Expression, statementsBeforeThisStatement: Seq[Statement])(implicit expectedResultType: ExpectedReturnType): Seq[CompilationError] = {
     val errorOrTerminalType: Either[InvalidExpression, TerminalType] = expression match {
       case operand: OperandNode =>
         findTerminalType(operand, statementsBeforeThisStatement)
@@ -92,7 +92,7 @@ object SemanticAnalysis {
     )
   }
 
-  def findTerminalType(expression: Expression, statementsBeforeThisStatement: Seq[StatementSequence]): Option[TerminalType] =
+  def findTerminalType(expression: Expression, statementsBeforeThisStatement: Seq[Statement]): Option[TerminalType] =
     expression match {
       case operator: OperatorNode =>
         // TODO is it ok to let the left node determine the expected type?
@@ -120,16 +120,16 @@ object SemanticAnalysis {
         }
     }
 
-  def referencedIdentifiers(statementSequence: StatementSequence): Seq[IdentifierToken] =
-    statementSequence match {
+  def referencedIdentifiers(statement: Statement): Seq[IdentifierToken] =
+    statement match {
       case print: Print => findIdentifiers(print.expression)
       case varAssignment: VarAssignment => varAssignment.identifierToken +: findIdentifiers(varAssignment.expression)
       case forLoop: ForLoop => (forLoop.identifierToken +: findIdentifiers(forLoop.from)) ++ findIdentifiers(forLoop.to)
       case varDeclaration: VarDeclaration => varDeclaration.expression.map(findIdentifiers).getOrElse(Nil)
     }
 
-  private def resolveUndeclaredIdentifiers(statementSequence: StatementSequence, statementsBeforeThisStatement: Seq[StatementSequence]) = {
-    val referencedIdentifiersInThisStatement = referencedIdentifiers(statementSequence).toSet
+  private def resolveUndeclaredIdentifiers(statement: Statement, statementsBeforeThisStatement: Seq[Statement]) = {
+    val referencedIdentifiersInThisStatement = referencedIdentifiers(statement).toSet
     referencedIdentifiersInThisStatement.flatMap { identifier =>
       val identifierIsDeclared = statementsBeforeThisStatement.exists {
         case varDeclaration: VarDeclaration => referencedIdentifiersInThisStatement.contains(varDeclaration.identifierToken)

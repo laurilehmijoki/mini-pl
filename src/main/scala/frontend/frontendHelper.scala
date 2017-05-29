@@ -1,6 +1,6 @@
 package frontend
 
-import frontend.StatementSequence.ParseResult
+import frontend.Statement.ParseResult
 
 object frontendHelper {
 
@@ -9,19 +9,19 @@ object frontendHelper {
   def verify(program: String): VerificationResult = {
     val tokens = Token.tokenize(program)
 
-    errorsOrStatements(StatementSequence.parse(tokens)).right.flatMap(SemanticAnalysis.verify)
+    errorsOrStatements(Statement.parse(tokens)).right.flatMap(SemanticAnalysis.verify)
   }
 
   def errorsOrStatements(parseResult: Seq[ParseResult]) =
-    parseResult.foldLeft(Right(Nil): Either[Seq[ParseError], Seq[StatementSequence]]) {
+    parseResult.foldLeft(Right(Nil): Either[Seq[ParseError], Seq[Statement]]) {
       (memo, item) =>
         item match {
           case Left(errors) =>
             val previousErrors = memo.left.getOrElse(Nil)
             Left(previousErrors :+ errors)
-          case Right(statementSequences) =>
+          case Right(statements) =>
             memo.right.map {
-              _ :+ statementSequences
+              _ :+ statements
             }
         }
     }

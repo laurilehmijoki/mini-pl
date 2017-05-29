@@ -1,6 +1,6 @@
 package frontend
 
-import frontend.StatementSequence.{ParseResult, errorOrExpression}
+import frontend.Statement.{ParseResult, errorOrExpression}
 import frontend.Token._
 import frontend.VarDeclaration._
 
@@ -15,10 +15,10 @@ sealed trait Program
            |   "print" <expr>
            |   "assert" "(" <expr> ")"
  */
-sealed trait StatementSequence extends Program
+sealed trait Statement extends Program
 
-object StatementSequence {
-  type ParseResult = Either[ParseError, StatementSequence]
+object Statement {
+  type ParseResult = Either[ParseError, Statement]
   type StatementParser = (Seq[Token]) => Option[ParseResult]
   type Parser = (Seq[Token]) => Option[(ParseResult, Seq[Token])]
 
@@ -61,7 +61,7 @@ object StatementSequence {
 
 // "for" <var_ident> "in" <expr> ".." <expr> "do"
 //     <stmts> "end" "for"
-case class ForLoop(identifierToken: IdentifierToken, from: Expression, to: Expression, statements: Seq[StatementSequence]) extends StatementSequence
+case class ForLoop(identifierToken: IdentifierToken, from: Expression, to: Expression, statements: Seq[Statement]) extends Statement
 
 object ForLoop {
   def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
@@ -71,9 +71,9 @@ object ForLoop {
           case `l<do>r`(toTokenCandidates, rightFromDo) =>
             rightFromDo match {
               case `l<end for;>r`(forLoopBodyStatements, unconsumedTokens) =>
-              case class StatementSeq(statements: Seq[StatementSequence])
+              case class StatementSeq(statements: Seq[Statement])
                 val statements: Either[ParseError, StatementSeq] = frontendHelper
-                  .errorsOrStatements(StatementSequence.parse(forLoopBodyStatements))
+                  .errorsOrStatements(Statement.parse(forLoopBodyStatements))
                   .left.map(ManyErrors)
                   .right.map(StatementSeq)
 
@@ -102,7 +102,7 @@ object ForLoop {
 }
 
 // <var_ident> ":=" <expr>
-case class VarAssignment(identifierToken: IdentifierToken, expression: Expression) extends StatementSequence
+case class VarAssignment(identifierToken: IdentifierToken, expression: Expression) extends Statement
 
 object VarAssignment {
   def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
@@ -115,7 +115,7 @@ object VarAssignment {
 }
 
 // "print" <expr>
-case class Print(expression: Expression) extends StatementSequence
+case class Print(expression: Expression) extends Statement
 
 object Print {
   def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
@@ -128,7 +128,7 @@ object Print {
 }
 
 // "var" <var_ident> ":" <type> [ ":=" <expr> ]
-case class VarDeclaration(identifierToken: IdentifierToken, typeKeyword: TypeKeyword, expression: Option[Expression]) extends StatementSequence
+case class VarDeclaration(identifierToken: IdentifierToken, typeKeyword: TypeKeyword, expression: Option[Expression]) extends Statement
 
 object VarDeclaration {
   def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
