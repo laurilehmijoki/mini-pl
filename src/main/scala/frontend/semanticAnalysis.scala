@@ -10,23 +10,20 @@ object SemanticAnalysis {
       lazy val statementsBeforeThisStatement = statements.take(index)
       statement match {
         case print: Print =>
-          implicit val expectedReturnType: ExpectedReturnType = None
           resolveUndeclaredIdentifiers(print, statementsBeforeThisStatement) ++
-          resolveExpressionErrors(print.expression, statementsBeforeThisStatement)
+          resolveExpressionErrors(print.expression, statementsBeforeThisStatement, expectedResultType = None)
         case varAssignment: VarAssignment =>
-          implicit val expectedReturnType: ExpectedReturnType = None // TODO repetition here, can we remove it?
           resolveUndeclaredIdentifiers(varAssignment, statementsBeforeThisStatement) ++
-            resolveExpressionErrors(varAssignment.expression, statementsBeforeThisStatement)
+            resolveExpressionErrors(varAssignment.expression, statementsBeforeThisStatement, expectedResultType = None)
         case forLoop: ForLoop =>
-          implicit val expectedReturnType: ExpectedReturnType = None // TODO repetition here, can we remove it?
           resolveUndeclaredIdentifiers(forLoop, statementsBeforeThisStatement) ++
-            resolveExpressionErrors(forLoop.from, statementsBeforeThisStatement)
-            resolveExpressionErrors(forLoop.to, statementsBeforeThisStatement)
+            resolveExpressionErrors(forLoop.from, statementsBeforeThisStatement, expectedResultType = None)
+            resolveExpressionErrors(forLoop.to, statementsBeforeThisStatement, expectedResultType = None)
             // TODO verify that the control variable is not reassigned within the loop
             // TODO Also verify that the range is from int to another
             // TODO Also verify that there are no VarDeclarations in the loop
         case varDeclaration: VarDeclaration =>
-          implicit val expectedReturnType: ExpectedReturnType = Some(varDeclaration.typeKeyword match {
+          val expectedReturnType: ExpectedReturnType = Some(varDeclaration.typeKeyword match {
             case _: StringTypeKeyword => classOf[StringToken]
             case _: IntTypeKeyword => classOf[IntToken]
           })
@@ -34,7 +31,7 @@ object SemanticAnalysis {
             case another: VarDeclaration if another.identifierToken.token == varDeclaration.identifierToken.token =>
               IdentifierAlreadyDeclared(varDeclaration.identifierToken, another)
           } ++
-            varDeclaration.expression.map(expression => resolveExpressionErrors(expression, statementsBeforeThisStatement)).getOrElse(Nil) ++
+            varDeclaration.expression.map(expression => resolveExpressionErrors(expression, statementsBeforeThisStatement, expectedReturnType)).getOrElse(Nil) ++
             resolveUndeclaredIdentifiers(varDeclaration, statementsBeforeThisStatement)
       }
     }) match {
@@ -56,7 +53,7 @@ object SemanticAnalysis {
   type TerminalType = Class[_ <: Terminal]
   type ExpectedReturnType = Option[TerminalType]
 
-  def resolveExpressionErrors(expression: Expression, statementsBeforeThisStatement: Seq[Statement])(implicit expectedResultType: ExpectedReturnType): Seq[CompilationError] = {
+  def resolveExpressionErrors(expression: Expression, statementsBeforeThisStatement: Seq[Statement], expectedResultType: ExpectedReturnType): Seq[CompilationError] = {
     val errorOrTerminalType: Either[InvalidExpression, TerminalType] = expression match {
       case operand: OperandNode =>
         findTerminalType(operand, statementsBeforeThisStatement)
