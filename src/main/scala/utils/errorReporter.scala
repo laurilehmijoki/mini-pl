@@ -28,6 +28,8 @@ object errorReporter {
     }.mkString
 
     def headlinesAndDescriptions(parseErrors: Seq[CompilationError]): Seq[(String, String)] = parseErrors.flatMap {
+      case e: EmptyForLoopBody =>
+        ("Syntax error", s"The for loop body may not be empty") :: Nil
       case e: IncompatibleTypes =>
         ("Type error", s"Expected ${e.expectedType.getSimpleName} but got ${e.foundType.getSimpleName} in expression ${e.expression}") :: Nil
       case e: IdentifierAlreadyDeclared =>
@@ -56,6 +58,7 @@ object errorReporter {
 
   def tokensAssociatedWithError(e: CompilationError): Seq[Token] =
     e match {
+      case e: EmptyForLoopBody => e.tokens
       case e: IncompatibleTypes => tokens(e.expression)
       case e: IdentifierAlreadyDeclared =>
         e.conflictingToken :: Nil

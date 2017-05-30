@@ -67,10 +67,14 @@ object ForLoop {
             rightFromDo match {
               case `l<end for;>r`(forLoopBodyStatements, unconsumedTokens) =>
               case class StatementSeq(statements: Seq[Statement])
-                val statements: Either[ParseError, StatementSeq] = frontendHelper
-                  .errorsOrStatements(Statement.parse(forLoopBodyStatements))
-                  .left.map(ManyErrors)
-                  .right.map(StatementSeq)
+                val statements: Either[ParseError, StatementSeq] =
+                  if (forLoopBodyStatements.isEmpty)
+                    Left(EmptyForLoopBody(tokens))
+                  else
+                    frontendHelper
+                      .errorsOrStatements(Statement.parse(forLoopBodyStatements))
+                      .left.map(ManyErrors)
+                      .right.map(StatementSeq)
 
                 val errorOrStatement = identifierOrError(second, tokens) ::
                   inKeywordOrError(third, tokens) ::

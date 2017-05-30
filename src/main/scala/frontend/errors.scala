@@ -8,6 +8,7 @@ sealed trait CompilationError
 sealed trait ParseError extends CompilationError
 
 case class SyntaxError(tokens: Seq[Token], message: String) extends ParseError
+case class EmptyForLoopBody(tokens: Seq[Token]) extends ParseError
 case class ParserNotFound(tokens: Seq[Token]) extends ParseError
 case class ManyErrors(errors: Seq[ParseError]) extends ParseError
 case class OperatorAtInvalidPosition(stack: List[Expression], operatorToken: OperatorToken) extends ParseError

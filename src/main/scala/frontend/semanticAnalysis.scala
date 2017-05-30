@@ -1,6 +1,7 @@
 package frontend
 
 import frontend.Token._
+import interpreter.IntegerValue
 
 case class VerifiedProgram(statements: Seq[Statement])
 

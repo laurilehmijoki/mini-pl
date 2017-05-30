@@ -165,6 +165,23 @@ object samplePrograms extends Specification {
         ),
         stdout = Some("01234")
       ))
+    ),
+    SampleProgram(
+      "A program with empty for loop body",
+      """
+        |var z : int;
+        |for z in 0..5 do
+        |end for;
+        |""".stripMargin,
+      {
+        case Left((errors: ManyErrors) :: Nil) =>
+          errors.errors.map(_.getClass) must equalTo(classOf[EmptyForLoopBody] :: Nil)
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = Some(InterpretationResult(
+        Map(),
+        stdout = None
+      ))
     )
+
   )
 }

@@ -205,6 +205,21 @@ end for;
 * interpretation results in the following symbol table
   * `z` -> `4`
 
+### A program with empty for loop body
+
+```
+var z : int;
+for z in 0..5 do
+end for;
+```
+
+
+* compilation fails
+* error:
+```
+Syntax error: The for loop body may not be empty
+```
+
 
 ## Development
 
