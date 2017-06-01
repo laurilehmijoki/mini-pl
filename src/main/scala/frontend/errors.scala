@@ -18,6 +18,7 @@ sealed trait SemanticError extends CompilationError
 case class IdentifierAlreadyDeclared(conflictingToken: Token, declaredHere: VarDeclaration) extends SemanticError
 case class IdentifierNotDeclared(identifierToken: IdentifierToken) extends SemanticError
 case class InvalidExpression(expression: Expression) extends SemanticError
+case class ControlVariableMayNotBeReassigned(illegalReassignment: VarAssignment, controlVariable: IdentifierToken) extends SemanticError
 case class IncompatibleTypes(
                               expression: Expression,
                               foundType: TerminalType,

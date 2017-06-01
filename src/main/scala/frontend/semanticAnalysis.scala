@@ -18,9 +18,8 @@ object SemanticAnalysis {
         case forLoop: ForLoop =>
           resolveUndeclaredIdentifiers(forLoop, statementsBeforeThisStatement) ++
             resolveExpressionErrors(forLoop.from, statementsBeforeThisStatement, expectedResultType = Some(classOf[IntToken])) ++
-            resolveExpressionErrors(forLoop.to, statementsBeforeThisStatement, expectedResultType = Some(classOf[IntToken]))
-
-            // TODO verify that the control variable is not reassigned within the loop
+            resolveExpressionErrors(forLoop.to, statementsBeforeThisStatement, expectedResultType = Some(classOf[IntToken])) ++
+            noReassignment(forLoop.identifierToken, forLoop.statements)
 
             // TODO Also verify that there are no VarDeclarations in the loop
         case varDeclaration: VarDeclaration =>
@@ -140,4 +139,9 @@ object SemanticAnalysis {
     }
   }
 
+  def noReassignment(identifierToken: IdentifierToken, statements: Seq[Statement]): Seq[CompilationError] =
+    statements.collect {
+      case (assignment: VarAssignment) if assignment.identifierToken.token == identifierToken.token =>
+        ControlVariableMayNotBeReassigned(assignment, identifierToken)
+    }
 }

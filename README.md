@@ -236,6 +236,22 @@ end for;
 Type error: Expected IntToken but got StringToken in expression OperandNode(StringToken("test"))
 ```
 
+### A program with reassignment of the for loop control variable
+
+```
+var z : int;
+for z in 2..3 do
+  z := 5;
+end for;
+```
+
+
+* compilation fails
+* error:
+```
+Syntax error: The for loop control variable IdentifierToken(z) may not be reassigned
+```
+
 
 ## Development
 

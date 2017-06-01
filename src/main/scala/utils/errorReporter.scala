@@ -28,6 +28,8 @@ object errorReporter {
     }.mkString
 
     def headlinesAndDescriptions(parseErrors: Seq[CompilationError]): Seq[(String, String)] = parseErrors.flatMap {
+      case e: ControlVariableMayNotBeReassigned =>
+        ("Syntax error", s"The for loop control variable ${e.controlVariable} may not be reassigned") :: Nil
       case e: EmptyForLoopBody =>
         ("Syntax error", s"The for loop body may not be empty") :: Nil
       case e: IncompatibleTypes =>
@@ -58,6 +60,7 @@ object errorReporter {
 
   def tokensAssociatedWithError(e: CompilationError): Seq[Token] =
     e match {
+      case e: ControlVariableMayNotBeReassigned => e.illegalReassignment.tokens
       case e: EmptyForLoopBody => e.tokens
       case e: IncompatibleTypes => tokens(e.expression)
       case e: IdentifierAlreadyDeclared =>

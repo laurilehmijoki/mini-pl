@@ -196,6 +196,23 @@ object samplePrograms extends Specification {
         Map(),
         stdout = None
       ))
+    ),
+    SampleProgram(
+      "A program with reassignment of the for loop control variable",
+      """
+        |var z : int;
+        |for z in 2..3 do
+        |  z := 5;
+        |end for;
+        |""".stripMargin,
+      {
+        case Left(error +: Nil) => error.getClass must equalTo(classOf[ControlVariableMayNotBeReassigned])
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = Some(InterpretationResult(
+        Map(),
+        stdout = None
+      ))
     )
+
   )
 }

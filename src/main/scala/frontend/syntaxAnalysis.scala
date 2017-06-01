@@ -101,13 +101,13 @@ object ForLoop {
 }
 
 // <var_ident> ":=" <expr>
-case class VarAssignment(identifierToken: IdentifierToken, expression: Expression) extends Statement
+case class VarAssignment(identifierToken: IdentifierToken, expression: Expression, tokens: Seq[Token]) extends Statement
 
 object VarAssignment {
   def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
     tokens match {
       case (identifierToken: IdentifierToken) +: (_: AssignmentToken) +: `l;r`((leftOfSemicolon, rightOfSemicolon)) =>
-        Some((errorOrExpression(leftOfSemicolon).map(expression => VarAssignment(identifierToken, expression)), rightOfSemicolon))
+        Some((errorOrExpression(leftOfSemicolon).map(expression => VarAssignment(identifierToken, expression, tokens)), rightOfSemicolon))
       case _ =>
         None
     }
