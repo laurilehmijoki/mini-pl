@@ -1,6 +1,5 @@
 package samples
 
-import frontend.Token.IdentifierToken
 import frontend._
 import frontend.frontendHelper.VerificationResult
 import interpreter.{IntegerValue, StringValue, SymbolValue}
@@ -181,7 +180,22 @@ object samplePrograms extends Specification {
         Map(),
         stdout = None
       ))
+    ),
+    SampleProgram(
+      "A program with for loop from string to int",
+      """
+        |var z : int;
+        |for z in "test"..5 do
+        |  print z;
+        |end for;
+        |""".stripMargin,
+      {
+        case Left(error +: Nil) => error.getClass must equalTo(classOf[IncompatibleTypes])
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = Some(InterpretationResult(
+        Map(),
+        stdout = None
+      ))
     )
-
   )
 }

@@ -1,7 +1,6 @@
 package frontend
 
 import frontend.Token._
-import interpreter.IntegerValue
 
 case class VerifiedProgram(statements: Seq[Statement])
 
@@ -18,10 +17,11 @@ object SemanticAnalysis {
             resolveExpressionErrors(varAssignment.expression, statementsBeforeThisStatement, expectedResultType = None)
         case forLoop: ForLoop =>
           resolveUndeclaredIdentifiers(forLoop, statementsBeforeThisStatement) ++
-            resolveExpressionErrors(forLoop.from, statementsBeforeThisStatement, expectedResultType = None)
-            resolveExpressionErrors(forLoop.to, statementsBeforeThisStatement, expectedResultType = None)
+            resolveExpressionErrors(forLoop.from, statementsBeforeThisStatement, expectedResultType = Some(classOf[IntToken])) ++
+            resolveExpressionErrors(forLoop.to, statementsBeforeThisStatement, expectedResultType = Some(classOf[IntToken]))
+
             // TODO verify that the control variable is not reassigned within the loop
-            // TODO Also verify that the range is from int to another
+
             // TODO Also verify that there are no VarDeclarations in the loop
         case varDeclaration: VarDeclaration =>
           val expectedReturnType: ExpectedReturnType = Some(varDeclaration.typeKeyword match {

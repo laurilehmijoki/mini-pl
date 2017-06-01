@@ -220,6 +220,22 @@ end for;
 Syntax error: The for loop body may not be empty
 ```
 
+### A program with for loop from string to int
+
+```
+var z : int;
+for z in "test"..5 do
+  print z;
+end for;
+```
+
+
+* compilation fails
+* error:
+```
+Type error: Expected IntToken but got StringToken in expression OperandNode(StringToken("test"))
+```
+
 
 ## Development
 
