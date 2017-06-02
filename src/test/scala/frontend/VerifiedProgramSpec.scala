@@ -25,6 +25,7 @@ class VerifiedProgramSpec extends Specification {
         implicit val formattingContext: FormattingContext = BashShell
         val baos = new ByteArrayOutputStream()
         implicit val stdOut: PrintStream = new PrintStream(baos)
+        implicit val stdIn: (() => String) = sampleProgram.stdIn.getOrElse(() => throw new RuntimeException("No stdin provided"))
         val symbolTable = interpreter.interpreter.interpret(verifiedProgram)
 
         s"result in correct symbol table" in {

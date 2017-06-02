@@ -6,13 +6,15 @@ import frontend.Token._
 import frontend._
 import utils.{BashShell, FormattingContext, errorReporter}
 
+import scala.util.Try
+
 sealed trait SymbolValue
 case class IntegerValue(value: Int) extends SymbolValue
 case class StringValue(value: String) extends SymbolValue
 
 object interpreter {
 
-  def interpret(program: String)(implicit formattingContext: FormattingContext, systemOut: PrintStream): Int = {
+  def interpret(program: String)(implicit formattingContext: FormattingContext, systemOut: PrintStream, readLineFromStdIn: (() => String)): Int = {
     val exitStatus = frontendHelper.verify(program) match {
       case Left(err: Seq[CompilationError]) =>
         val errorReport = errorReporter.createErrorReport(program, err)
@@ -25,7 +27,7 @@ object interpreter {
     exitStatus
   }
 
-  def interpret(verifiedProgram: VerifiedProgram)(implicit systemOut: PrintStream): SymbolTable = {
+  def interpret(verifiedProgram: VerifiedProgram)(implicit systemOut: PrintStream, readLineFromStdIn: (() => String)): SymbolTable = {
     visit(verifiedProgram.statements, Map[String, SymbolValue]())
   }
 
@@ -35,13 +37,20 @@ object interpreter {
   def updateWithExpression(symbols: SymbolTable, identifierToken: IdentifierToken, expression: Expression): SymbolTable =
     updateSymbol(symbols, identifierToken, evaluate(expression, symbols))
 
-  def visit(statements: Seq[Statement], symbols: SymbolTable)(implicit systemOut: PrintStream): SymbolTable =
+  def visit(statements: Seq[Statement], symbols: SymbolTable)(implicit systemOut: PrintStream, readLineFromStdIn: (() => String)): SymbolTable =
     statements.foldLeft(symbols) { (symbolsMemo, statement) =>
       visit(statement, symbolsMemo)
     }
 
-  def visit(statement: Statement, symbols: SymbolTable)(implicit systemOut: PrintStream): SymbolTable =
+  def visit(statement: Statement, symbols: SymbolTable)(implicit systemOut: PrintStream, readLineFromStdIn: (() => String)): SymbolTable =
     statement match {
+      case read: Read =>
+        val line = readLineFromStdIn()
+        updateSymbol(
+          symbols,
+          read.identifierToken,
+          Try(line.toInt).toOption.map(IntegerValue).getOrElse(StringValue(line))
+        )
       case f: ForLoop =>
         val (from, to) = (evaluate(f.from, symbols), evaluate(f.to, symbols)) match {
           case (IntegerValue(fromInt), IntegerValue(toInt)) => (fromInt, toInt)

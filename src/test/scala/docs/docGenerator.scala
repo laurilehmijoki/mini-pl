@@ -83,6 +83,7 @@ MIT
         .map { verifiedProgram =>
           val baos = new ByteArrayOutputStream()
           implicit val stdOut: PrintStream = new PrintStream(baos)
+          implicit val stdIn: (() => String) = sampleProgram.stdIn.getOrElse(() => throw new RuntimeException("No stdin provided"))
           val symbolTable = interpret(verifiedProgram)
           (symbolTable, new String(baos.toByteArray, "utf-8"))
         }

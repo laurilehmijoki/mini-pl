@@ -15,7 +15,8 @@ object samplePrograms extends Specification {
                             description: String,
                             sourceCode: String,
                             matcher: PartialFunction[VerificationResult, MatchResult[_]],
-                            interpretationResult: Option[InterpretationResult]
+                            interpretationResult: Option[InterpretationResult],
+                            stdIn: Option[() => String] = None
                           )
   val programs: Seq[SampleProgram] = Seq(
     SampleProgram(
@@ -227,6 +228,21 @@ object samplePrograms extends Specification {
       }: PartialFunction[VerificationResult, MatchResult[_]],
       interpretationResult = Some(InterpretationResult(
         Map(),
+        stdout = None
+      ))
+    ),
+    SampleProgram(
+      "A program with stdin read",
+      """
+        |var z : int;
+        |read z;
+        |""".stripMargin,
+      {
+        case Right(verifiedProgram) => verifiedProgram.statements must haveLength(2)
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      stdIn = Some(() => "42"),
+      interpretationResult = Some(InterpretationResult(
+        Map("z" -> IntegerValue(42)),
         stdout = None
       ))
     )

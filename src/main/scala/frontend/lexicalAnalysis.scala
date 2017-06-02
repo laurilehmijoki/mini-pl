@@ -89,6 +89,7 @@ object Token {
     tokenCandidate.string match {
       case t@"var" => VarKeyword(t)
       case t@"print" => PrintKeyword(t)
+      case t@"read" => ReadKeyword(t)
       case t@"for" => ForKeyword(t)
       case t@"in" => InKeyword(t)
       case t@"do" => DoKeyword(t)
@@ -144,6 +145,7 @@ object Token {
   case class EndKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
   case class VarKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
   case class PrintKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
+  case class ReadKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends Keyword
   sealed trait TypeKeyword extends Keyword
   case class IntTypeKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends TypeKeyword
   case class StringTypeKeyword(token: String)(implicit val tokenLocation: TokenLocation) extends TypeKeyword

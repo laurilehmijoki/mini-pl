@@ -26,6 +26,7 @@ object Statement {
     { VarDeclaration.parse(_) } ::
       { VarAssignment.parse(_) } ::
       { Print.parse(_) } ::
+      { Read.parse(_) } ::
       { ForLoop.parse(_) } ::
       Nil
 
@@ -121,6 +122,25 @@ object Print {
     tokens match {
       case (_: PrintKeyword) +: `l;r`((leftOfSemicolon, rightOfSemicolon)) =>
         Some((errorOrExpression(leftOfSemicolon).map(Print(_)), rightOfSemicolon))
+      case _ =>
+        None
+    }
+}
+
+// "read" <var_ident>
+case class Read(identifierToken: IdentifierToken) extends Statement
+
+object Read {
+  def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
+    tokens match {
+      case (_: ReadKeyword) +: `l;r`((leftOfSemicolon, rightOfSemicolon)) =>
+        val parseResult = leftOfSemicolon match {
+          case (identifierToken: IdentifierToken) :: Nil =>
+            Right(Read(identifierToken))
+          case wrongTokens =>
+            Left(SyntaxError(tokens, s"Unexpected token(s) $wrongTokens, expected $IdentifierToken"))
+        }
+        Some((parseResult, rightOfSemicolon))
       case _ =>
         None
     }

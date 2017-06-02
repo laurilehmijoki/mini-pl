@@ -9,6 +9,8 @@ object SemanticAnalysis {
     statements.zipWithIndex.flatMap(Function.tupled { (statement, index) =>
       lazy val statementsBeforeThisStatement = statements.take(index)
       statement match {
+        case read: Read =>
+          resolveUndeclaredIdentifiers(read, statementsBeforeThisStatement)
         case print: Print =>
           resolveUndeclaredIdentifiers(print, statementsBeforeThisStatement) ++
           resolveExpressionErrors(print.expression, statementsBeforeThisStatement, expectedResultType = None)
@@ -20,7 +22,7 @@ object SemanticAnalysis {
             resolveExpressionErrors(forLoop.from, statementsBeforeThisStatement, expectedResultType = Some(classOf[IntToken])) ++
             resolveExpressionErrors(forLoop.to, statementsBeforeThisStatement, expectedResultType = Some(classOf[IntToken])) ++
             noReassignment(forLoop.identifierToken, forLoop.statements) ++
-            noVarDeclarations(forLoop.statements)
+            ensureContainsNoVarDeclarations(forLoop.statements)
         case varDeclaration: VarDeclaration =>
           val expectedReturnType: ExpectedReturnType = Some(varDeclaration.typeKeyword match {
             case _: StringTypeKeyword => classOf[StringToken]
@@ -109,7 +111,7 @@ object SemanticAnalysis {
                     }
                   else
                     Nil
-                case _: Print | _: VarAssignment | _: ForLoop =>
+                case _: Print | _: VarAssignment | _: ForLoop | _: Read =>
                   Nil
               }
               .headOption
@@ -118,6 +120,7 @@ object SemanticAnalysis {
 
   def referencedIdentifiers(statement: Statement): Seq[IdentifierToken] =
     statement match {
+      case read: Read => read.identifierToken :: Nil
       case print: Print => findIdentifiers(print.expression)
       case varAssignment: VarAssignment => varAssignment.identifierToken +: findIdentifiers(varAssignment.expression)
       case forLoop: ForLoop => (forLoop.identifierToken +: findIdentifiers(forLoop.from)) ++ findIdentifiers(forLoop.to)
@@ -129,7 +132,7 @@ object SemanticAnalysis {
     referencedIdentifiersInThisStatement.flatMap { identifier =>
       val identifierIsDeclared = statementsBeforeThisStatement.exists {
         case varDeclaration: VarDeclaration => referencedIdentifiersInThisStatement.contains(varDeclaration.identifierToken)
-        case _: Print | _: VarAssignment | _: ForLoop => false
+        case _: Print | _: VarAssignment | _: ForLoop | _: Read => false
       }
       if (identifierIsDeclared)
         Nil
@@ -144,10 +147,10 @@ object SemanticAnalysis {
         ControlVariableMayNotBeReassigned(assignment, identifierToken)
     }
 
-  def noVarDeclarations(statements: Seq[Statement]): Seq[CompilationError] =
+  def ensureContainsNoVarDeclarations(statements: Seq[Statement]): Seq[CompilationError] =
     statements.flatMap {
       case v: VarDeclaration => VarDeclarationWithinForLoop(v) :: Nil
-      case forLoop: ForLoop => noVarDeclarations(forLoop.statements)
-      case _: VarAssignment | _: Print => Nil
+      case forLoop: ForLoop => ensureContainsNoVarDeclarations(forLoop.statements)
+      case _: VarAssignment | _: Print | _: Read => Nil
     }
 }

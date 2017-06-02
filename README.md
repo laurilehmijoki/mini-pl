@@ -268,6 +268,24 @@ end for;
 Syntax error: For loop may not contain var declarations
 ```
 
+### A program with stdin read
+
+```
+var z : int;
+read z;
+```
+
+
+* compilation succeeds
+* standard output is
+
+```
+
+```
+
+* interpretation results in the following symbol table
+  * `z` -> `42`
+
 
 ## Development
 
