@@ -19,9 +19,8 @@ object SemanticAnalysis {
           resolveUndeclaredIdentifiers(forLoop, statementsBeforeThisStatement) ++
             resolveExpressionErrors(forLoop.from, statementsBeforeThisStatement, expectedResultType = Some(classOf[IntToken])) ++
             resolveExpressionErrors(forLoop.to, statementsBeforeThisStatement, expectedResultType = Some(classOf[IntToken])) ++
-            noReassignment(forLoop.identifierToken, forLoop.statements)
-
-            // TODO Also verify that there are no VarDeclarations in the loop
+            noReassignment(forLoop.identifierToken, forLoop.statements) ++
+            noVarDeclarations(forLoop.statements)
         case varDeclaration: VarDeclaration =>
           val expectedReturnType: ExpectedReturnType = Some(varDeclaration.typeKeyword match {
             case _: StringTypeKeyword => classOf[StringToken]
@@ -143,5 +142,12 @@ object SemanticAnalysis {
     statements.collect {
       case (assignment: VarAssignment) if assignment.identifierToken.token == identifierToken.token =>
         ControlVariableMayNotBeReassigned(assignment, identifierToken)
+    }
+
+  def noVarDeclarations(statements: Seq[Statement]): Seq[CompilationError] =
+    statements.flatMap {
+      case v: VarDeclaration => VarDeclarationWithinForLoop(v) :: Nil
+      case forLoop: ForLoop => noVarDeclarations(forLoop.statements)
+      case _: VarAssignment | _: Print => Nil
     }
 }

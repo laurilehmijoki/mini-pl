@@ -28,6 +28,8 @@ object errorReporter {
     }.mkString
 
     def headlinesAndDescriptions(parseErrors: Seq[CompilationError]): Seq[(String, String)] = parseErrors.flatMap {
+      case e: VarDeclarationWithinForLoop =>
+        ("Syntax error", s"For loop may not contain var declarations") :: Nil
       case e: ControlVariableMayNotBeReassigned =>
         ("Syntax error", s"The for loop control variable ${e.controlVariable} may not be reassigned") :: Nil
       case e: EmptyForLoopBody =>
@@ -60,6 +62,7 @@ object errorReporter {
 
   def tokensAssociatedWithError(e: CompilationError): Seq[Token] =
     e match {
+      case e: VarDeclarationWithinForLoop => e.illegalVarDeclaration.tokens
       case e: ControlVariableMayNotBeReassigned => e.illegalReassignment.tokens
       case e: EmptyForLoopBody => e.tokens
       case e: IncompatibleTypes => tokens(e.expression)

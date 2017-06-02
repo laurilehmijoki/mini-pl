@@ -212,7 +212,23 @@ object samplePrograms extends Specification {
         Map(),
         stdout = None
       ))
+    ),
+    SampleProgram(
+      "A program with var declaration within the for loop",
+      """
+        |var z : int;
+        |for z in 2..3 do
+        |  var y : int;
+        |end for;
+        |""".stripMargin,
+      {
+        case Left(error +: Nil) =>
+          error.getClass must equalTo(classOf[VarDeclarationWithinForLoop])
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = Some(InterpretationResult(
+        Map(),
+        stdout = None
+      ))
     )
-
   )
 }

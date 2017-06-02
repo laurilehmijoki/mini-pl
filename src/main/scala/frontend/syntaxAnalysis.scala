@@ -127,22 +127,22 @@ object Print {
 }
 
 // "var" <var_ident> ":" <type> [ ":=" <expr> ]
-case class VarDeclaration(identifierToken: IdentifierToken, typeKeyword: TypeKeyword, expression: Option[Expression]) extends Statement
+case class VarDeclaration(identifierToken: IdentifierToken, typeKeyword: TypeKeyword, expression: Option[Expression], tokens: Seq[Token]) extends Statement
 
 object VarDeclaration {
   def parse(tokens: Seq[Token]): Option[(ParseResult, Seq[Token])] =
     tokens match {
-      case (_: VarKeyword) +: second +: third +: fourth +: (_: SemicolonToken) +: tail => // // "var" <var_ident> ":" <type>
+      case varDeclarationTokens@((_: VarKeyword) +: second +: third +: fourth +: (_: SemicolonToken) +: tail) => // // "var" <var_ident> ":" <type>
         val errorOrVarStatement = identifierOrError(second, tokens) :: typePrefixOrError(third, tokens) :: typeOrError(fourth,tokens) :: Nil match {
           case Right(identifier: IdentifierToken) +: Right(_) +: Right(typeVal: TypeKeyword) +: Nil =>
-            Right(VarDeclaration(identifier, typeVal, None))
+            Right(VarDeclaration(identifier, typeVal, None, varDeclarationTokens))
           case xs =>
             Left(ManyErrors(xs.collect {
               case Left(parseError) => parseError
             }))
         }
         Some((errorOrVarStatement, tail))
-      case (_: VarKeyword) +: second +: third +: fourth +: fifth +: `l;r`((leftOfSemicolon, rightOfSemicolon))  => // "var" <var_ident> ":" <type> ":=" <expr>
+      case varDeclarationTokens@((_: VarKeyword) +: second +: third +: fourth +: fifth +: `l;r`((leftOfSemicolon, rightOfSemicolon)))  => // "var" <var_ident> ":" <type> ":=" <expr>
         val assignmentOrError: Either[ParseError, Token] = fifth match {
           case assignment: AssignmentToken => Right(assignment)
           case wrongToken => Left(SyntaxError(tokens, s"$wrongToken is not the expected $AssignmentToken"))
@@ -150,7 +150,7 @@ object VarDeclaration {
 
         val errorOrVarStatement = identifierOrError(second, tokens) :: typePrefixOrError(third, tokens) :: typeOrError(fourth,tokens) :: assignmentOrError :: errorOrExpression(leftOfSemicolon) :: Nil match {
           case Right(identifier: IdentifierToken) +: Right(_) +: Right(typeVal: TypeKeyword) +: Right(_) +: Right(expression: Expression) +: _ =>
-            Right(VarDeclaration(identifier, typeVal, Some(expression)))
+            Right(VarDeclaration(identifier, typeVal, Some(expression), varDeclarationTokens))
           case xs =>
             Left(ManyErrors(xs.collect {
               case Left(parseError) => parseError

@@ -252,6 +252,22 @@ end for;
 Syntax error: The for loop control variable IdentifierToken(z) may not be reassigned
 ```
 
+### A program with var declaration within the for loop
+
+```
+var z : int;
+for z in 2..3 do
+  var y : int;
+end for;
+```
+
+
+* compilation fails
+* error:
+```
+Syntax error: For loop may not contain var declarations
+```
+
 
 ## Development
 
