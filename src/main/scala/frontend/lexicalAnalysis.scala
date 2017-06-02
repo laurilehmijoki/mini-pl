@@ -16,8 +16,6 @@ object Token {
   val stringToken = """("(.*)")""".r
   val identifierToken = "([a-zA-Z]+)".r
   val operators = "+" :: "-" :: "*" :: "/" :: "<" :: "=" :: "&" :: "!" :: Nil
-  val keywords = "var" :: "for" :: "end" :: "in" :: "do" :: "read" ::
-                 "print" :: "int" :: "string" :: "bool" :: "assert" :: Nil
 
   case class UnidentifiedToken(string: String, startIndex: Int)
 
