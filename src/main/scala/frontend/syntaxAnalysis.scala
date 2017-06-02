@@ -4,8 +4,6 @@ import frontend.Statement.{ParseResult}
 import frontend.Token._
 import frontend.ParseHelpers._
 
-sealed trait Program
-
 /*
  <stmt>   ::=  "var" <var_ident> ":" <type> [ ":=" <expr> ]
            |   <var_ident> ":=" <expr>
@@ -15,7 +13,7 @@ sealed trait Program
            |   "print" <expr>
            |   "assert" "(" <expr> ")"
  */
-sealed trait Statement extends Program
+sealed trait Statement
 
 object Statement {
   type ParseResult = Either[ParseError, Statement]
