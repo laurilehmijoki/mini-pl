@@ -185,6 +185,89 @@ foobar
   * `z` -> `foo`
   * `foo` -> `foobar`
 
+### A program with for loop
+
+```
+var z : int;
+for z in 0..5 do
+  print z;
+end for;
+```
+
+
+* compilation succeeds
+* standard output is
+
+```
+01234
+```
+
+* interpretation results in the following symbol table
+  * `z` -> `4`
+
+### A program with empty for loop body
+
+```
+var z : int;
+for z in 0..5 do
+end for;
+```
+
+
+* compilation fails
+* error:
+```
+Syntax error: The for loop body may not be empty
+```
+
+### A program with for loop from string to int
+
+```
+var z : int;
+for z in "test"..5 do
+  print z;
+end for;
+```
+
+
+* compilation fails
+* error:
+```
+Type error: Expected IntToken but got StringToken in expression OperandNode(StringToken("test"))
+```
+
+### A program with reassignment of the for loop control variable
+
+```
+var z : int;
+for z in 2..3 do
+  z := 5;
+end for;
+```
+
+
+* compilation fails
+* error:
+```
+Syntax error: The for loop control variable IdentifierToken(z) may not be reassigned
+```
+
+### A program with var declaration within the for loop
+
+```
+var z : int;
+for z in 2..3 do
+  var y : int;
+end for;
+```
+
+
+* compilation fails
+* error:
+```
+Syntax error: For loop may not contain var declarations
+```
+
 
 ## Development
 

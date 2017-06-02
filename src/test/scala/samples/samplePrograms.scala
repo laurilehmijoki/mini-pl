@@ -1,6 +1,5 @@
 package samples
 
-import frontend.Token.IdentifierToken
 import frontend._
 import frontend.frontendHelper.VerificationResult
 import interpreter.{IntegerValue, StringValue, SymbolValue}
@@ -146,6 +145,89 @@ object samplePrograms extends Specification {
           "foo" -> StringValue("foobar")
         ),
         stdout = Some("foobar")
+      ))
+    ),
+    SampleProgram(
+      "A program with for loop",
+      """
+        |var z : int;
+        |for z in 0..5 do
+        |  print z;
+        |end for;
+        |""".stripMargin,
+      {
+        case Right(verifiedProgram) => verifiedProgram.statements must haveLength(2)
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = Some(InterpretationResult(
+        Map(
+          "z" -> IntegerValue(4)
+        ),
+        stdout = Some("01234")
+      ))
+    ),
+    SampleProgram(
+      "A program with empty for loop body",
+      """
+        |var z : int;
+        |for z in 0..5 do
+        |end for;
+        |""".stripMargin,
+      {
+        case Left((errors: ManyErrors) :: Nil) =>
+          errors.errors.map(_.getClass) must equalTo(classOf[EmptyForLoopBody] :: Nil)
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = Some(InterpretationResult(
+        Map(),
+        stdout = None
+      ))
+    ),
+    SampleProgram(
+      "A program with for loop from string to int",
+      """
+        |var z : int;
+        |for z in "test"..5 do
+        |  print z;
+        |end for;
+        |""".stripMargin,
+      {
+        case Left(error +: Nil) => error.getClass must equalTo(classOf[IncompatibleTypes])
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = Some(InterpretationResult(
+        Map(),
+        stdout = None
+      ))
+    ),
+    SampleProgram(
+      "A program with reassignment of the for loop control variable",
+      """
+        |var z : int;
+        |for z in 2..3 do
+        |  z := 5;
+        |end for;
+        |""".stripMargin,
+      {
+        case Left(error +: Nil) => error.getClass must equalTo(classOf[ControlVariableMayNotBeReassigned])
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = Some(InterpretationResult(
+        Map(),
+        stdout = None
+      ))
+    ),
+    SampleProgram(
+      "A program with var declaration within the for loop",
+      """
+        |var z : int;
+        |for z in 2..3 do
+        |  var y : int;
+        |end for;
+        |""".stripMargin,
+      {
+        case Left(error +: Nil) =>
+          error.getClass must equalTo(classOf[VarDeclarationWithinForLoop])
+      }: PartialFunction[VerificationResult, MatchResult[_]],
+      interpretationResult = Some(InterpretationResult(
+        Map(),
+        stdout = None
       ))
     )
   )

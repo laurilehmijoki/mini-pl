@@ -24,7 +24,8 @@ class VerifiedProgramSpec extends Specification {
       s"interpretation of ${sampleProgram.sourceCode} in ${sampleProgram.description.toLowerCase()}" should {
         implicit val formattingContext: FormattingContext = BashShell
         val baos = new ByteArrayOutputStream()
-        val symbolTable = interpreter.interpreter.interpret(verifiedProgram, new PrintStream(baos))
+        implicit val stdOut: PrintStream = new PrintStream(baos)
+        val symbolTable = interpreter.interpreter.interpret(verifiedProgram)
 
         s"result in correct symbol table" in {
           symbolTable should equalTo(interpretationResult.symbolTable)
